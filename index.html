@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clue</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1 style="text-align: center;">Clue</h1>
+
+    <!-- <li>
+        <ul>Miss Scarlett</ul>
+        <ul>Professor Plum</ul>
+        <ul>Mrs. Peacock</ul>
+        <ul>Mr. Green</ul>
+        <ul>Colonel Mustard</ul>
+        <ul>Mrs. White</ul>
+    </li>
+    <hr>
+    <li>
+        <ul>Candlestick</ul>
+        <ul>Dagger</ul>
+        <ul>Lead Pipe</ul>
+        <ul>Pistol</ul>
+        <ul>Rope</ul>
+        <ul>Wrench</ul>
+    </li>
+    <hr>
+    <li>
+        <ul>Hall</ul>
+        <ul>Lounge</ul>
+        <ul>Dining Room</ul>
+        <ul>Kitchen</ul>
+        <ul>Ballroom</ul>
+        <ul>Conservatory</ul>
+        <ul>Billiard Room</ul>
+        <ul>Library</ul>
+        <ul>Study</ul>
+    </li> -->
+
+    <div id="pawn-container">
+        <div id="scarlett-pawn" class="pawn" style="background-color: maroon"></div>
+        <div id="plum-pawn" class="pawn" style="background-color: purple"></div>
+        <div id="peacock-pawn" class="pawn" style="background-color: darkblue"></div>
+        <div id="green-pawn" class="pawn" style="background-color: green"></div>
+        <div id="mustard-pawn" class="pawn" style="background-color: darkgoldenrod"></div>
+        <div id="white-pawn" class="pawn" style="background-color: white"></div>
+    </div>
+
+    <div id="player-select-container">
+        <h id="player-select-header">How many players? (2-6)</h>
+        <input type="number" id="player-select-box" value="2" min="2" max="6">
+    </div>
+
+    <button id="generate-btn" onclick="generateCrime()">Generate</button>
+
+    <script src="script.js"></script>
+</body>
+</html>
