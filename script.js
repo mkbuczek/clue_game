@@ -56,6 +56,7 @@ let envelopeArray = [];
 
 let playerPawn = null;
 let playerAmt = 2;
+let playerHands = {};
 
 let turnOrder = [];
 let currentTurnIndex = 0;
@@ -129,29 +130,28 @@ function generateCrime(){
 
 //deals cards to each player's hand until the deck is empty
 function generatePlayerHands(){
-    let playerAmt = document.getElementById("player-select-box").value; //get num of players
+    playerAmt = Number(document.getElementById("player-select-box").value); //get num of players
     let deck = allCardsArray.filter(card => !envelopeArray.includes(card));
-    let playerHands = {};
 
     //create playerHands object with each player
-    for (let i = 1; i <= playerAmt; i++){
-        playerHands[`player${i}`] = [];
-    }
+    turnOrder.forEach(pawn => {
+        playerHands[pawn] = [];
+    });
 
     //deal cards randomly until deck is empty
-    let currentPlayer = 1;
+    let currentIndex = 0;
     while(deck.length > 0){
-        let randomIndex = Math.floor(Math.random() * deck.length);
-        let card = deck.splice(randomIndex, 1)[0];
+        let cardIndex = Math.floor(Math.random() * deck.length);
+        let card = deck.splice(cardIndex, 1)[0];
 
-        playerHands[`player${currentPlayer}`].push(card);
+        const currentPawn = turnOrder[currentIndex];
+        playerHands[currentPawn].push(card);
 
         //deal to next player
-        currentPlayer++;
-        if (currentPlayer > playerAmt) currentPlayer = 1; //loop back
+        currentIndex = (currentIndex + 1) % turnOrder.length;
     }
 
-    if(debug) console.log(playerHands);
+    if (debug) console.log(playerHands);
     return playerHands;
 }
 
@@ -161,7 +161,7 @@ function renderHands(playerHand){
     handContainer.innerHTML = "";
 
     //get player1's hand
-    const hand = playerHand["player1"];
+    const hand = playerHand[playerPawn];
 
     hand.forEach(cardName => {
         const cardDiv = document.createElement("div");
@@ -288,11 +288,31 @@ function checkGuess(guessArray){
     if (envelopeArray.every((val, index) => val === guessArray[index])){
         console.log("You win!");
     } else {
-        findMatchingCard();
-        console.log("Nope");
+        const revealedInfo = findMatchingCard(guessArray);
+        console.log(`${revealedInfo.card} was revealed by ${revealedInfo.player}!`);
     }
 }
 
-function findMatchingCard(){
-    
+function findMatchingCard(guessArray){
+    //start from next player
+    for (let i = 1; i < playerAmt; i++) {
+        const playerIndex = (currentTurnIndex + i) % playerAmt;
+
+        const player = turnOrder[playerIndex];
+        const hand = playerHands[player];
+
+        //find matching cards in hands
+        console.log(`playerIndex: ${playerIndex}, playerAmt: ${playerAmt}, turnOrder: ${turnOrder}`);
+        console.log(`player: ${player}, currentTurnIndex: ${currentTurnIndex}`);
+        const matchingCards = hand.filter(card => guessArray.includes(card));
+
+        if(matchingCards.length > 0){
+            const chosenCard = matchingCards[Math.floor(Math.random() * matchingCards.length)];
+            if(debug) console.log(`${player} can disprove with: ${chosenCard}`);
+            return { player, card: chosenCard };
+        }
+    }
+
+    if(debug) console.log("No one can disprove!");
+    return null;
 }
