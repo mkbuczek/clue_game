@@ -61,6 +61,10 @@ let turnOrder = [];
 let currentTurnIndex = 0;
 let pawnLocations = {};
 
+let roomGuess = null;
+let suspectGuess = null;
+let weaponGuess = null;
+
 pawns.forEach(pawn => {
     pawn.addEventListener("click", () => {
         pawns.forEach(pawn => pawn.classList.remove("selected-pawn")); //remove class on each click
@@ -202,6 +206,8 @@ function nextTurn(){
     }
 }
 
+//checks valid player moves based on current location
+//adds clickdetectors for each valid room 
 function playerMove(){
     const currentRoom = pawnLocations[playerPawn];
     const availableMoves = getAvailableMoves(playerPawn, currentRoom);
@@ -221,11 +227,11 @@ function playerMove(){
     });
 }
 
+//removes highlight styles and displays guess HUD when a room is clicked
 function handleRoomClick(e){
     const roomId = e.currentTarget.id;
     const clickedRoom = roomIdToName[roomId];
     pawnLocations[playerPawn] = clickedRoom;
-    console.log(`You selected ${clickedRoom}`);
 
     //remove highlights
     document.querySelectorAll(".room").forEach(room => {
@@ -236,12 +242,11 @@ function handleRoomClick(e){
     showGuessHUD(clickedRoom);
 }
 
+//displays guess HUD, called when a room is clicked on a player's turn
 function showGuessHUD(room){
-    //guessHUD.innerHTML = ""; // clear old hud
-
-    //room
     const roomLabel = document.getElementById("room-label");
     roomLabel.textContent = `Room: ${room}`;
+    roomGuess = room;
 
     guessHUD.style.display = "flex";
 }
@@ -253,6 +258,7 @@ suspectBtns.forEach(btn => {
 
         const suspectLabel = document.getElementById("suspect-label");
         suspectLabel.textContent = `Suspect: ${btn.textContent}`;
+        suspectGuess = btn.textContent;
     });
 });
 
@@ -263,5 +269,30 @@ weaponBtns.forEach(btn => {
         
         const weaponLabel = document.getElementById("weapon-label");
         weaponLabel.textContent = `Weapon: ${btn.textContent}`;
+        weaponGuess = btn.textContent;
     });
 });
+
+//puts each guess into an array to compare to the envelopeArray
+function submitGuess(){
+    let guessArray = [suspectGuess, weaponGuess, roomGuess];
+    console.log(guessArray);
+
+    guessHUD.style.display = "none";
+
+    checkGuess(guessArray);
+}
+
+//check if guessArray matches envelopeArray, else, call findMatchingCard
+function checkGuess(guessArray){
+    if (envelopeArray.every((val, index) => val === guessArray[index])){
+        console.log("You win!");
+    } else {
+        findMatchingCard();
+        console.log("Nope");
+    }
+}
+
+function findMatchingCard(){
+    
+}
