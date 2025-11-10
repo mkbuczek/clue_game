@@ -1,10 +1,9 @@
 body{
     background-color: black;
     color: white;
-}
-
-li{
-    font-size: 0.75em;
+    user-select: none;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
 }
 
 #pawn-container{
@@ -20,7 +19,6 @@ li{
 }
 
 .pawn{
-    background-color: blue;
     width: 100px;
     height: 100px;
     margin: 5px;
@@ -41,15 +39,21 @@ li{
     border: 3px solid lime;
 }
 
-#generate-btn{
+#start-btn{
+    background-color: green;
+    color: white;
+    border: 3px solid white;
     display: flex;
     margin: 0 auto;
     margin-top: 15px;
     font-size: 2em;
     border-radius: 10px;
+    padding: 10px;
+    width: 150px;
+    justify-content: center;
 }
 
-#generate-btn:hover{
+#start-btn:hover{
     cursor: pointer;
     filter: brightness(0.8);
 }
@@ -71,3 +75,148 @@ li{
     margin: 15px;
     font-size: 20px;
 }
+
+#player-hand{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 95vw;
+    max-height: calc(3 * 225px + 10px);
+    padding: 10px;
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    gap: 5px;
+    transform: translateX(-50%);
+    z-index: 5;
+}
+
+.card{
+    flex: 0 0 150px;
+    height: 200px;
+    position: relative;
+    background-color: hsla(0, 0%, 35%, 0.9);
+    text-align: center;
+    transition: 0.3s;
+    border: 2px solid white;
+    border-radius: 10px;
+    box-sizing: border-box;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.card:hover{
+    transform: translateY(-20px);
+    filter: brightness(0.9);
+}
+
+.card-header{
+    font-size: 1.25em;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+#game-board-container{
+    position: relative;
+    width: 80vw;
+    max-width: 900px;
+    margin: auto;
+}
+
+#board-img{
+    display: none;
+    width: 100%;
+    display: block;
+}
+
+.room{
+    position: absolute;
+    border-radius: 5px;
+}
+
+.highlight-room{
+    background-color: rgba(0, 255, 0, 0.3);
+    border: 2px solid lime;
+    cursor: pointer;
+}
+
+#game-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#current-turn-header{
+    font-size: 2em;
+    background-color: hsla(0, 0%, 80%, 0.7);
+    padding: 10px;
+    width: 100vw;
+    text-align: center;
+}
+
+#guess-hud{
+    display: flex;
+    flex-direction: column;
+    background-color: hsla(0, 0%, 20%, 0.9);
+    position: absolute;
+    width: 50%;
+    max-width: 50%;
+    top: 50%;
+    left: 50%;                
+    transform: translate(-50%, -50%);
+    padding: 15px;
+    border-radius: 5px;
+    z-index: 10;
+}
+
+.guess-label{
+    font-size: 1.5em;
+}
+
+#suspect-container{
+    
+    width: 50%;
+}
+
+#weapon-container{
+    
+    width: 50%;
+}
+
+#guess-dropdown-container{
+    display: flex;
+}
+
+.suspect-btn, .weapon-btn{
+    height: 50px;
+    text-align: center;
+    font-size: 1.25em;
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid white;
+    box-sizing: border-box;
+}
+
+.suspect-btn:hover, .weapon-btn:hover{
+    cursor: pointer;
+    filter: brightness(0.7);
+}
+
+#guess-btn{
+    font-size: 1.25em;
+    margin: 10px auto;
+}
+
+.selected-guess-hud-btn{
+    background-color: red;
+}
+
+#hall { top: 5%; left: 40%; width: 18.5%; height: 20%; }
+#lounge { top: 4%; left: 72%; width: 22%; height: 18%; }
+#dining-room { top: 38%; left: 69%; width: 25%; height: 18%; }
+#kitchen { top: 75%; left: 78%; width: 20%; height: 20%; }
+#ballroom { top: 68%; left: 37%; width: 26%; height: 20%; }
+#conservatory { top: 79%; left: 3%; width: 21%; height: 16%; }
+#billiard-room { top: 49%; left: 4%; width: 20%; height: 15%; }
+#library { top: 26%; left: 7%; width: 18%; height: 15%; }
+#study { top: 2%; left: 4%; width: 21%; height: 13%; }

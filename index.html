@@ -7,53 +7,78 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1 style="text-align: center;">Clue</h1>
 
-    <!-- <li>
-        <ul>Miss Scarlett</ul>
-        <ul>Professor Plum</ul>
-        <ul>Mrs. Peacock</ul>
-        <ul>Mr. Green</ul>
-        <ul>Colonel Mustard</ul>
-        <ul>Mrs. White</ul>
-    </li>
-    <hr>
-    <li>
-        <ul>Candlestick</ul>
-        <ul>Dagger</ul>
-        <ul>Lead Pipe</ul>
-        <ul>Pistol</ul>
-        <ul>Rope</ul>
-        <ul>Wrench</ul>
-    </li>
-    <hr>
-    <li>
-        <ul>Hall</ul>
-        <ul>Lounge</ul>
-        <ul>Dining Room</ul>
-        <ul>Kitchen</ul>
-        <ul>Ballroom</ul>
-        <ul>Conservatory</ul>
-        <ul>Billiard Room</ul>
-        <ul>Library</ul>
-        <ul>Study</ul>
-    </li> -->
+    <div id="setup-container">
+        <h1 style="text-align: center;">Clue</h1>
 
-    <div id="pawn-container">
-        <div id="scarlett-pawn" class="pawn" style="background-color: maroon"></div>
-        <div id="plum-pawn" class="pawn" style="background-color: purple"></div>
-        <div id="peacock-pawn" class="pawn" style="background-color: darkblue"></div>
-        <div id="green-pawn" class="pawn" style="background-color: green"></div>
-        <div id="mustard-pawn" class="pawn" style="background-color: darkgoldenrod"></div>
-        <div id="white-pawn" class="pawn" style="background-color: white"></div>
+        <div id="pawn-container">
+            <div id="Miss Scarlet" class="pawn" style="background-color: maroon"></div>
+            <div id="Professor Plum" class="pawn" style="background-color: purple"></div>
+            <div id="Mrs. Peacock" class="pawn" style="background-color: darkblue"></div>
+            <div id="Mr. Green" class="pawn" style="background-color: green"></div>
+            <div id="Colonel Mustard" class="pawn" style="background-color: darkgoldenrod"></div>
+            <div id="Mrs. White" class="pawn" style="background-color: white"></div>
+        </div>
+
+        <div id="player-select-container">
+            <h id="player-select-header">How many players? (2-6)</h>
+            <input type="number" id="player-select-box" value="2" min="2" max="6">
+        </div>
+
+        <button id="start-btn" onclick="startGame()">Start</button>
+
+
+
     </div>
 
-    <div id="player-select-container">
-        <h id="player-select-header">How many players? (2-6)</h>
-        <input type="number" id="player-select-box" value="2" min="2" max="6">
-    </div>
+    <div id="game-container" style="display: none;">
 
-    <button id="generate-btn" onclick="generateCrime()">Generate</button>
+        <h2 id="current-turn-header"></h2>
+
+        <div id="game-board-container">
+            <div id="guess-hud" style="display: none;">
+                <h3 id="room-label" class="guess-label">Room: ???</h3>
+                <h3 id="suspect-label" class="guess-label">Suspect: ???</h3>
+                <h3 id="weapon-label" class="guess-label">Weapon: ???</h3>
+
+                <button id="guess-btn" onclick="submitGuess()">Submit Guess</button>
+
+                <div id="guess-dropdown-container">
+                    <div id="suspect-container">
+                        <div class="suspect-btn">Miss Scarlet</div>
+                        <div class="suspect-btn">Professor Plum</div>
+                        <div class="suspect-btn">Mrs. Peacock</div>
+                        <div class="suspect-btn">Mr. Green</div>
+                        <div class="suspect-btn">Colonel Mustard</div>
+                        <div class="suspect-btn">Mrs. White</div>
+                    </div>
+                    <div id="weapon-container">
+                        <div class="weapon-btn">Candlestick</div>
+                        <div class="weapon-btn">Dagger</div>
+                        <div class="weapon-btn">Lead Pipe</div>
+                        <div class="weapon-btn">Pistol</div>
+                        <div class="weapon-btn">Rope</div>
+                        <div class="weapon-btn">Wrench</div>
+                    </div>
+                </div>
+
+            </div>
+            <img src="assets/clue_board.png" alt="Clue Board" id="board-img" draggable="false">
+
+            <div class="room" id="hall"></div>
+            <div class="room" id="lounge"></div>
+            <div class="room" id="dining-room"></div>
+            <div class="room" id="kitchen"></div>
+            <div class="room" id="ballroom"></div>
+            <div class="room" id="conservatory"></div>
+            <div class="room" id="billiard-room"></div>
+            <div class="room" id="library"></div>
+            <div class="room" id="study"></div>
+        </div>
+
+        <div id="player-hand"></div>
+
+    </div>
 
     <script src="script.js"></script>
 </body>
