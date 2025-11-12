@@ -81,10 +81,9 @@ body{
     flex-wrap: wrap;
     justify-content: center;
     width: 95vw;
-    max-height: calc(3 * 225px + 10px);
-    padding: 10px;
+    padding: 5px;
     position: fixed;
-    bottom: 10px;
+    bottom: 0px;
     left: 50%;
     gap: 5px;
     transform: translateX(-50%);
@@ -92,8 +91,9 @@ body{
 }
 
 .card{
-    flex: 0 0 150px;
-    height: 200px;
+    font-size: 0.8em;
+    height: 150px;
+    width: 115px;
     position: relative;
     background-color: hsla(0, 0%, 35%, 0.9);
     text-align: center;
@@ -119,12 +119,11 @@ body{
 #game-board-container{
     position: relative;
     width: 80vw;
-    max-width: 900px;
-    margin: auto;
+    max-width: 800px;
+    margin: 5px;
 }
 
 #board-img{
-    display: none;
     width: 100%;
     display: block;
 }
@@ -147,40 +146,43 @@ body{
 }
 
 #current-turn-header{
-    font-size: 2em;
+    font-size: 1.5em;
     background-color: hsla(0, 0%, 80%, 0.7);
     padding: 10px;
     width: 100vw;
     text-align: center;
+    margin: 5px;
 }
 
 #guess-hud{
-    display: flex;
+    display: none;
     flex-direction: column;
-    background-color: hsla(0, 0%, 20%, 0.9);
+    background-color: hsla(0, 0%, 20%, 0.8);
     position: absolute;
     width: 50%;
-    max-width: 50%;
+    height: fit-content;
+    max-height: 90%;
+    max-width: 400px;
     top: 50%;
-    left: 50%;                
+    left: 50%;
     transform: translate(-50%, -50%);
-    padding: 15px;
-    border-radius: 5px;
+    padding: 20px;
+    border: 2px solid white;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+    overflow: auto;
     z-index: 10;
 }
 
 .guess-label{
-    font-size: 1.5em;
+    font-size: 1.3em;
+    margin: 5px;
 }
 
-#suspect-container{
-    
+#suspect-container, #weapon-container{
     width: 50%;
-}
-
-#weapon-container{
-    
-    width: 50%;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 #guess-dropdown-container{
@@ -188,13 +190,21 @@ body{
 }
 
 .suspect-btn, .weapon-btn{
-    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    font-size: 1.25em;
+    min-height: 50px;
+    font-size: 1.1em;
+    white-space: nowrap;
+    overflow: hidden;
     margin: 5px;
     padding: 5px;
     border: 1px solid white;
     box-sizing: border-box;
+    flex-shrink: 0;
+    flex-grow: 0;
+    flex-basis: auto;
 }
 
 .suspect-btn:hover, .weapon-btn:hover{
@@ -203,12 +213,101 @@ body{
 }
 
 #guess-btn{
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1.25em;
     margin: 10px auto;
 }
 
 .selected-guess-hud-btn{
     background-color: red;
+}
+
+#game-pawn-container{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    width: 77%;
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 15px;
+    border: 2px solid white;
+}
+
+.game-pawn{
+    width: 70px;
+    height: 70px;
+    margin: 10px;
+    flex-shrink: 0;
+    border-radius: 50px;
+    box-sizing: border-box;
+}
+
+.current-turn-pawn{
+    box-shadow: 0 0 10px lime;
+    transform: scale(1.15);
+    border: 3px solid lime;
+    box-sizing: border-box;
+}
+
+#revealed-card-box{
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.8em;
+    background-color: hsla(0, 0%, 80%, 0.7);
+    padding: 5px;
+    width: 55%;
+    max-width: 500px;
+    border: 2px solid white;
+    border-radius: 15px;
+    margin: 5px;
+    box-sizing: border-box;
+}
+
+#revealed-card-pawn{
+    background-color: maroon;
+    border: 3px solid black;
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    flex-shrink: 0;
+    border-radius: 50px;
+    box-sizing: border-box;
+}
+
+#revealed-card-wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+#revealed-card-click-text{
+    font-size: 0.9em;
+}
+
+.highlighted-card {
+    background-color: hsla(120, 74%, 46%, 0.712);
+    border: 2px solid lime;
+    transform: translateY(-15px) scale(1.1) !important;
+    box-shadow: 0 0 20px lime;
+    z-index: 100;
+    animation: 2s infinite ease-in-out !important;
+    transition: all 0.4s ease !important;
+}
+
+.highlighted-card:hover {
+    transform: translateY(-25px) scale(1.15) !important;
+    box-shadow: 0 0 40px lime;
+}
+
+.highlighted-card-header {
+    color: rgb(196, 255, 196) !important;
+    text-shadow: 0 0 10px lime;
+    animation: 2s infinite !important;
 }
 
 #hall { top: 5%; left: 40%; width: 18.5%; height: 20%; }
