@@ -401,7 +401,7 @@ weaponBtns.forEach(btn => {
 });
 
 //puts each guess into an array to compare to the envelopeArray
-function submitGuess(){
+async function submitGuess(){
     if (!suspectGuess || !weaponGuess || !roomGuess){
         console.error("Please select a suspect, weapon, and room.")
         return;
@@ -416,24 +416,7 @@ function submitGuess(){
     suspectBtns.forEach(btn => btn.classList.remove("selected-guess-hud-btn"));
     weaponBtns.forEach(btn => btn.classList.remove("selected-guess-hud-btn"));
 
-    checkGuess(guessArray);
-}
-
-//check if guessArray matches envelopeArray, else, call findMatchingCard
-async function checkGuess(guessArray){
-    if (envelopeArray.every((val, index) => val === guessArray[index])){
-        console.log("You win!");
-        return;
-    }
-
     const revealedInfo = await findMatchingCard(guessArray, true); //try to find matching card
-
-    if (revealedInfo){
-        console.log(`${revealedInfo.card} was revealed by ${revealedInfo.player}!`);
-    } else {
-        console.error("No one could disprove");
-    }
-
     endTurn(); //turn ends after guessing
 }
 
@@ -559,12 +542,16 @@ function playerRevealCard(matchingCards){
                 cardDiv.classList.add("highlighted-card")
                 cardDiv.querySelector(".card-header").classList.add("highlighted-card-header");
 
-                const clickHandler = () => {
+                const clickHandler = async () => {
                     cards.forEach(c => {
                         c.classList.remove("highlighted-card");
                         c.querySelector(".card-header")?.classList.remove("highlighted-card-header");
                         c.onclick = null;
                     });
+                    hideRevealedCardBox();
+                    await new Promise(resolve => setTimeout(resolve, 200)); //wait before showing
+                    showRevealedCardBox(playerPawn, `You showed `, cardName, true); //display chosen card
+                    await waitForClick(); //wait for player click
                     hideRevealedCardBox();
                     resolve(cardName);
                 };
