@@ -5,6 +5,8 @@ const setupContainer = document.getElementById("setup-container");
 const gameContainer = document.getElementById("game-container");
 const currentTurnHeader = document.getElementById("current-turn-header");
 const guessHUD = document.getElementById("guess-hud");
+const guessAccuseHUD = document.getElementById("guess-accuse-hud");
+const envelopeHUD = document.getElementById("envelope-hud");
 const gamePawnContainer = document.getElementById("game-pawn-container");
 
 const suspectsArray = ["Miss Scarlet", "Professor Plum", "Mrs. Peacock",
@@ -77,6 +79,7 @@ let cpuNotebooks = {};
 let roomGuess = null;
 let suspectGuess = null;
 let weaponGuess = null;
+let guessBtnHandler = null;
 
 pawns.forEach(pawn => {
     pawn.addEventListener("click", () => {
@@ -126,6 +129,28 @@ function startGame(){
     gameContainer.style.display = "flex"; //display game container
 
     nextTurn(); //begin gameplay loop
+}
+
+//resets variables for new game
+function resetGame(){
+    //reset game state
+    pawnLocations = {};
+    playerHands = {};
+    currentTurnIndex = 0;
+    turnOrder = [];
+    cpuNotebooks = {};
+    envelopeArray = [];
+
+    //player guesses
+    suspectGuess = null;
+    weaponGuess = null;
+    roomGuess = null;
+    playerPawn = null;
+
+    //change visuals
+    gameContainer.style.display = "none";
+    setupContainer.style.display = "block";
+    pawns.forEach(pawn => pawn.classList.remove("selected-pawn"));
 }
 
 //helper function to pick a random entry from an array
@@ -366,16 +391,56 @@ function handleRoomClick(e){
         room.removeEventListener("click", handleRoomClick);
     });
 
-    showGuessHUD(clickedRoom);
+    showGuessAccuseHUD(clickedRoom);
 }
 
-//displays guess HUD, called when a room is clicked on a player's turn
-function showGuessHUD(room){
+function showGuessAccuseHUD(clickedRoom){
+    guessAccuseHUD.style.display = "flex";
+
+    const guessBtn = document.getElementById("choose-guess-btn");
+    const accuseBtn = document.getElementById("choose-accuse-btn");
+
+    guessBtn.addEventListener("click", () => {
+        showGuessHUD(clickedRoom, true);
+        guessAccuseHUD.style.display = "none";
+    });
+
+    accuseBtn.addEventListener("click", () => {
+        showGuessHUD(clickedRoom, false);
+        guessAccuseHUD.style.display = "none";
+    });
+}
+
+//displays guess HUD, called when player chooses to guess after clicking a room
+function showGuessHUD(room, guess = true){
     const roomLabel = document.getElementById("room-label");
+    const guessHeader = document.getElementById("guess-hud-header");
+    const guessBtn = document.getElementById("guess-btn");
     roomLabel.textContent = `Room: ${room}`;
     roomGuess = room;
 
     guessHUD.style.display = "flex";
+
+    //remove previous listener
+    if (guessBtnHandler) {
+        guessBtn.removeEventListener("click", guessBtnHandler);
+        guessBtnHandler = null;
+    }
+
+    //add listener
+    guessBtnHandler = () => {
+        submitGuess(guess);
+    };
+    guessBtn.addEventListener("click", guessBtnHandler);
+
+    //update HUD text
+    if(!guess) {
+        guessHeader.textContent = "Accuse!";
+        guessBtn.textContent = "Submit Accusation";
+    } else {
+        guessHeader.textContent = "Guess!";
+        guessBtn.textContent = "Submit Guess";
+    }
 }
 
 suspectBtns.forEach(btn => {
@@ -401,11 +466,18 @@ weaponBtns.forEach(btn => {
 });
 
 //puts each guess into an array to compare to the envelopeArray
-async function submitGuess(){
+async function submitGuess(guess = true){
+    //check if weapon and suspect are selected
     if (!suspectGuess || !weaponGuess || !roomGuess){
         console.error("Please select a suspect, weapon, and room.")
         return;
     }
+
+    //reset labels
+    const suspectLabel = document.getElementById("suspect-label");
+    suspectLabel.textContent = `Suspect: ???`;
+    const weaponLabel = document.getElementById("weapon-label");
+    weaponLabel.textContent = `Weapon: ???`;
 
     let guessArray = [suspectGuess, weaponGuess, roomGuess];
     console.log(guessArray);
@@ -416,8 +488,14 @@ async function submitGuess(){
     suspectBtns.forEach(btn => btn.classList.remove("selected-guess-hud-btn"));
     weaponBtns.forEach(btn => btn.classList.remove("selected-guess-hud-btn"));
 
-    const revealedInfo = await findMatchingCard(guessArray, true); //try to find matching card
-    endTurn(); //turn ends after guessing
+    if(guess){
+        //guess
+        const revealedInfo = await findMatchingCard(guessArray, true); //try to find matching card
+        endTurn(); //turn ends after guessing
+    } else {
+        //accusation
+        showEnvelopeHUD(guessArray);
+    }
 }
 
 //finds matching cards from players hands and displays dialogue boxes
@@ -560,6 +638,61 @@ function playerRevealCard(matchingCards){
             }
         })
     })
+}
+
+function showEnvelopeHUD(guessArray){
+    const accuseText = document.getElementById("player-accusation-text");
+    const envelope = document.getElementById("envelope");
+    envelopeHUD.style.display = "flex";
+
+    const suspect = guessArray[0];
+    const weapon = guessArray[1];
+    const room = guessArray[2];
+
+    accuseText.textContent = `${suspect} with the ${weapon} in the ${room}`;
+
+    envelope.addEventListener("click", () => {
+        openEnvelope(guessArray);
+        envelopeHUD.style.display = "none";
+    });
+}
+
+async function openEnvelope(guessArray){
+    const sCard = document.getElementById("env-s-card");
+    const wCard = document.getElementById("env-w-card");
+    const rCard = document.getElementById("env-r-card");
+    const winLoseText = document.getElementById("win-lose-text");
+    const envelopeHUD = document.getElementById("open-envelope-hud");
+
+    envelopeHUD.style.display = "flex";
+
+    //set card text to each envelope card
+    sCard.textContent = envelopeArray[0];
+    wCard.textContent = envelopeArray[1];
+    rCard.textContent = envelopeArray[2];
+
+    //envelope is the same as accusation; player wins!
+    if (JSON.stringify(guessArray) === JSON.stringify(envelopeArray)) {
+        winLoseText.textContent = "You win!";
+        winLoseText.style.color = "lime";
+    } else {
+        //player loses
+        winLoseText.textContent = "You lose";
+        winLoseText.style.color = "maroon";
+    }
+
+    //close HUD when user clicks
+    await new Promise(resolve => {
+        const handler = (e) => {
+            document.removeEventListener("click", handler);
+            resolve();
+        };
+        setTimeout(() => document.addEventListener("click", handler), 0);
+    });
+
+    envelopeHUD.style.display = "none";
+    //reset the game!
+    resetGame();
 }
 
 function initCPUNotebooks(){

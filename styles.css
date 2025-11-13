@@ -174,6 +174,13 @@ body{
     z-index: 10;
 }
 
+#guess-hud-header{
+    text-align: center;
+    margin: 0;
+    font-size: 2em;
+    text-shadow: 5px 5px 25px white;
+}
+
 .guess-label{
     font-size: 1.3em;
     margin: 5px;
@@ -194,7 +201,7 @@ body{
     align-items: center;
     justify-content: center;
     text-align: center;
-    min-height: 50px;
+    min-height: 30px;
     font-size: 1.1em;
     white-space: nowrap;
     overflow: hidden;
@@ -222,6 +229,44 @@ body{
 
 .selected-guess-hud-btn{
     background-color: red;
+}
+
+#guess-accuse-hud{
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    background-color: hsla(0, 0%, 20%, 0.8);
+    position: absolute;
+    width: 50%;
+    height: fit-content;
+    max-height: 90%;
+    max-width: 400px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px;
+    border: 2px solid white;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+    text-align: center;
+    z-index: 10;
+}
+
+#ga-container{
+    width: 100%;
+}
+
+.ga-btn{
+    border-radius: 10px;
+    text-align: center;
+    font-size: 1.5em;
+    width: 100px;
+    margin: 5px;
+}
+
+.ga-btn:hover{
+    cursor: pointer;
+    filter: brightness(0.8);
 }
 
 #game-pawn-container{
@@ -308,6 +353,97 @@ body{
     color: rgb(196, 255, 196) !important;
     text-shadow: 0 0 10px lime;
     animation: 2s infinite !important;
+}
+
+#envelope-hud{
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    background-color: hsla(0, 0%, 20%, 0.8);
+    position: absolute;
+    width: 70%;
+    height: fit-content;
+    max-height: 90%;
+    max-width: 800px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px;
+    border: 2px solid white;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+    text-align: center;
+    z-index: 10;
+}
+
+#player-accusation-text{
+    text-decoration: underline;
+}
+
+#envelope{
+    width: 45%;
+    min-width: 200px;
+    border-radius: 5px;
+}
+
+#envelope:hover{
+    filter: brightness(0.8);
+    cursor: pointer;
+}
+
+#envelope-click-text{
+    font-size: 0.9em;
+}
+
+#open-envelope-hud{
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: hsla(30, 67%, 60%, 0.8);
+    position: absolute;
+    width: 60%;
+    height: fit-content;
+    max-height: 90%;
+    min-width: 370px;
+    max-width: 800px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px;
+    border: 2px solid white;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+    text-align: center;
+}
+
+.envelope-card{
+    font-size: 0.8em;
+    height: 150px;
+    width: 115px;
+    position: relative;
+    background-color: hsla(0, 0%, 35%, 0.9);
+    text-align: center;
+    transition: 0.3s;
+    border: 2px solid white;
+    border-radius: 10px;
+    box-sizing: border-box;
+    padding: 5px;
+    margin: 5px;
+}
+
+#envelope-card-container{
+    display: flex;
+}
+
+.envelope-card-header{
+    font-size: 1.25em;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+#win-lose-text{
+    margin: 5px;
 }
 
 #hall { top: 5%; left: 40%; width: 18.5%; height: 20%; }

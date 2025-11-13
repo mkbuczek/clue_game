@@ -9,7 +9,7 @@
 <body>
 
     <div id="setup-container">
-        <h1 style="text-align: center;">Clue</h1>
+        <h1 style="text-align: center;">Clue v0.4</h1>
 
         <div id="pawn-container">
             <div id="Miss Scarlet" class="pawn" style="background-color: #970000"></div>
@@ -27,8 +27,6 @@
 
         <button id="start-btn" onclick="startGame()">Start</button>
 
-
-
     </div>
 
     <div id="game-container" style="display: none;">
@@ -39,12 +37,48 @@
 
         <div id="game-board-container">
 
+            <div id="open-envelope-hud">
+                <div id="envelope-card-container">
+                    <div class="envelope-card">
+                        <div id="env-s-card" class="envelope-card-header">Test</div>
+                    </div>
+                    <div class="envelope-card">
+                        <div id="env-w-card" class="envelope-card-header">Test</div>
+                    </div>
+                    <div class="envelope-card">
+                        <div id="env-r-card" class="envelope-card-header">Test</div>
+                    </div>
+                </div>
+
+                <h2 id="win-lose-text">You win!</h2>
+                <h3 id="envelope-click-text">Click to continue</h3>
+            </div>
+
+            <div id="envelope-hud">
+                <h2 id="envelope-header">You accused:</h2>
+                <h3 id="player-accusation-text"></h3>
+                <div id="envelope-container">
+                    <img id="envelope" src="/assets/envelope_img.png" draggable=false></img>
+                    <h3 id="envelope-click-text">Click to open the envelope!</h3>
+                </div>
+            </div>
+
+            <div id="guess-accuse-hud">
+                <h3 id="guess-accuse-header">Make a guess or an accusation!</h3>
+                <div id="ga-container">
+                    <button id="choose-guess-btn" class="ga-btn">Guess</button>
+                    <button id="choose-accuse-btn" class="ga-btn">Accuse</button>
+                </div>
+            </div>
+
             <div id="guess-hud">
+                <h2 id="guess-hud-header">Guess!</h2>
+                
                 <h3 id="room-label" class="guess-label">Room: ???</h3>
                 <h3 id="suspect-label" class="guess-label">Suspect: ???</h3>
                 <h3 id="weapon-label" class="guess-label">Weapon: ???</h3>
 
-                <button id="guess-btn" onclick="submitGuess()">Submit Guess</button>
+                <button id="guess-btn">Submit Guess</button>
 
                 <div id="guess-dropdown-container">
                     <div id="suspect-container">
