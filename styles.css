@@ -4,6 +4,7 @@ body{
     user-select: none;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow-x: hidden;
+    margin: 0px;
 }
 
 #pawn-container{
@@ -80,14 +81,8 @@ body{
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    width: 95vw;
-    padding: 5px;
-    position: fixed;
-    bottom: 0px;
-    left: 50%;
     gap: 5px;
-    transform: translateX(-50%);
-    z-index: 5;
+    width: 100%;
 }
 
 .card{
@@ -151,7 +146,7 @@ body{
     padding: 10px;
     width: 100vw;
     text-align: center;
-    margin: 5px;
+    margin: 0px;
 }
 
 #guess-hud{
@@ -276,7 +271,7 @@ body{
     justify-content: center;
     width: 77%;
     max-width: 750px;
-    margin: 0 auto;
+    margin: 3px auto;
     padding: 15px;
     border: 2px solid white;
 }
@@ -339,7 +334,7 @@ body{
     border: 2px solid lime;
     transform: translateY(-10px) !important;
     box-shadow: 0 0 20px lime;
-    z-index: 100;
+    z-index: 5;
     animation: 2s infinite ease-in-out !important;
     transition: all 0.4s ease !important;
 }
@@ -444,6 +439,46 @@ body{
 
 #win-lose-text{
     margin: 5px;
+}
+
+.board-pawn{
+    width: 4%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50px;
+    position: absolute;
+    border: 2px solid black;
+    box-sizing: border-box;
+}
+
+#hand-container{
+    position: fixed;
+    display: flex;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95vw;
+    padding: 5px;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    z-index: 5;
+}
+
+#hide-hand-btn{
+    display: flex;
+    border-radius: 5px;
+    width: 80px;
+    height: 30px;
+    background-color: hsl(0, 0%, 41%);
+    cursor: pointer;
+    z-index: 6;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+}
+
+#hide-hand-btn:hover{
+    filter: brightness(0.8);
 }
 
 #hall { top: 5%; left: 40%; width: 18.5%; height: 20%; }

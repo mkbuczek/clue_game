@@ -62,6 +62,17 @@ const pawnColors = {
     "Mrs. White": "#e6e6e6"         
 };
 
+const pawnPositions = {
+    "Miss Scarlet": { x: 64.45, y: 2 },
+    "Colonel Mustard": { x: 92.5, y: 27.5 },
+    "Mrs. White": { x: 57.9, y: 94.8 },
+    "Mr. Green": { x: 38, y: 94.8 },
+    "Mrs. Peacock": { x: 2.5, y: 70.5 },
+    "Professor Plum": { x: 3.5, y: 20.5 },
+};
+
+const roomOccupancy = {};
+
 const debug = true;
 
 let envelopeArray = [];
@@ -124,6 +135,7 @@ function startGame(){
     renderTurnOrder(turnOrder);
     highlightCurrentTurnPawn();
     initCPUNotebooks();
+    createBoardPawns();
 
     setupContainer.style.display = "none"; //hide setup container
     gameContainer.style.display = "flex"; //display game container
@@ -216,6 +228,23 @@ function renderHands(playerHand){
     });
 }
 
+//hide hand btn logic
+const handDiv = document.getElementById("player-hand");
+const hideBtn = document.getElementById("hide-hand-btn");
+
+hideBtn.addEventListener("click", () => {
+    //hide hand if displayed
+    if(handDiv.style.display !== "none"){
+        handDiv.style.display = "none";
+        hideBtn.textContent = "Show";
+        
+    //show hand if hidden
+    } else {
+        handDiv.style.display = "flex";
+        hideBtn.textContent = "Hide";
+    }
+})
+
 //renders the turn order pawns above the game board
 function renderTurnOrder(turnOrder){
     gamePawnContainer.innerHTML = ""; //clear previous pawns
@@ -299,9 +328,9 @@ function playerMove(){
 async function cpuMove(currentPawn){
     //cpu is thinking
     showRevealedCardBox(currentPawn, `is thinking...`, null, false);
-    await new Promise(response => setTimeout(response, 1500));
+    await dialogueWait({ ms: 1500 });
     hideRevealedCardBox();
-    await new Promise(response => setTimeout(response, 1500));
+    await dialogueWait({ ms: 1500 });
 
     //move to a room
     const currentRoom = pawnLocations[currentPawn];
@@ -310,19 +339,20 @@ async function cpuMove(currentPawn){
 
     //update location
     pawnLocations[currentPawn] = chosenRoom;
+    renderPawnPosition(currentPawn); //render pawn to room
 
     //show cpu move
     showRevealedCardBox(currentPawn, `moved to the ${chosenRoom}`, null, false)
-    await new Promise(response => setTimeout(response, 1500));
+    await dialogueWait({ ms: 1500 });
     hideRevealedCardBox();
-    await new Promise(response => setTimeout(response, 1500));
+    await dialogueWait({ ms: 1500 });
 
     //cpu guesses
     const guess = generateCPUGuess(currentPawn, chosenRoom);
 
     //show guess
     showRevealedCardBox(currentPawn, `I think it was ${guess.suspect} with the ${guess.weapon} in the ${chosenRoom}`, null, true);
-    await waitForClick();
+    await dialogueWait( {requireClick: true} );
     hideRevealedCardBox();
 
     //run disprove logic
@@ -383,7 +413,8 @@ function updateCPUNotebook(guesser, guessArray, revealedInfo){
 function handleRoomClick(e){
     const roomId = e.currentTarget.id;
     const clickedRoom = roomIdToName[roomId];
-    pawnLocations[playerPawn] = clickedRoom;
+    pawnLocations[playerPawn] = clickedRoom; //set location to room
+    renderPawnPosition(playerPawn); //render pawn to room
 
     //remove highlights
     document.querySelectorAll(".room").forEach(room => {
@@ -517,13 +548,19 @@ async function findMatchingCard(guessArray, isPlayerGuess = false){
         //player is checking cards
         if (player === playerPawn){
             //card matches, player selects card to show
-            if (matchingCards.length > 0){ 
+            if (matchingCards.length > 0){
+                //display hand if hidden
+                if (handDiv.style.display === "none"){
+                    handDiv.style.display = "flex";
+                    hideBtn.textContent = "Hide";
+                }
+
                 const chosenCard = await playerRevealCard(matchingCards);
                 return { player, card: chosenCard};
             } else {
                 //no card matches
                 showRevealedCardBox(player, "I don't have those cards!", null, true);
-                await waitForClick();
+                await dialogueWait({ requireClick: true });
                 hideRevealedCardBox();
             }
         }
@@ -531,9 +568,9 @@ async function findMatchingCard(guessArray, isPlayerGuess = false){
         //cpu is checking cards
         else {
             showRevealedCardBox(player, "is checking their cards...", null, false);
-            await new Promise(resolve => setTimeout(resolve, 1500)); //wait before disappearing
+            await dialogueWait({ ms: 1500 }); //wait before disappearing
             hideRevealedCardBox();
-            await new Promise(resolve => setTimeout(resolve, 1000)); //wait before showing
+            await dialogueWait({ ms: 1000 }); //wait before showing
 
             //if they have a card, check if player should see or not
             if(matchingCards.length > 0){
@@ -542,13 +579,13 @@ async function findMatchingCard(guessArray, isPlayerGuess = false){
                 //reveal card to player if it is a player guess
                 if (isPlayerGuess){
                     showRevealedCardBox(player, `showed you: `, chosenCard, true); //display chosen card
-                    await waitForClick(); //wait for player click
+                    await dialogueWait({ requireClick: true }); //wait for player click
                     hideRevealedCardBox();
                 } else {
                     //reveal card only to cpu if not a player guess
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    await dialogueWait({ ms: 1000 });
                     showRevealedCardBox(player, `showed a card`, null, true);
-                    await waitForClick(); //wait for player click
+                    await dialogueWait({ requireClick: true }); //wait for player click
                     hideRevealedCardBox();
                 }
 
@@ -556,7 +593,7 @@ async function findMatchingCard(guessArray, isPlayerGuess = false){
             } else {
                 //if they don't have a card, show refute text
                 showRevealedCardBox(player, "I don't have those cards!", null, true);
-                await waitForClick();
+                await dialogueWait({ requireClick: true });
                 hideRevealedCardBox();
             }
         }
@@ -564,7 +601,7 @@ async function findMatchingCard(guessArray, isPlayerGuess = false){
 
     //no one can disprove
     showRevealedCardBox(null, "No one could disprove!", null, true);
-    await waitForClick();
+    await dialogueWait({ requireClick: true });
     hideRevealedCardBox();
     return null;
 }
@@ -595,14 +632,49 @@ function hideRevealedCardBox(){
     box.style.display = "none";
 }
 
-//waits for a click on the doc
-function waitForClick() {
+//waits for a click on the doc or timeout
+let currentDialogueClickHandler = null;
+
+function dialogueWait({ ms = null, requireClick = false } = {}) {
     return new Promise(resolve => {
-        const handler = () => {
-            document.removeEventListener("click", handler);
+        // Clean up any previous click handler
+        if (currentDialogueClickHandler) {
+            document.removeEventListener("click", currentDialogueClickHandler);
+            currentDialogueClickHandler = null;
+        }
+
+        let timeoutId = null;
+        let resolved = false;
+
+        const finish = () => {
+            if (resolved) return;
+            resolved = true;
+
+            if (timeoutId) clearTimeout(timeoutId);
+            if (currentDialogueClickHandler) {
+                document.removeEventListener("click", currentDialogueClickHandler);
+                currentDialogueClickHandler = null;
+            }
+
             resolve();
         };
-        document.addEventListener("click", handler);
+
+        //always allow clicking to skip optional waits
+        const clickHandler = () => finish();
+
+        //add click listener after a tiny delay to prevent triggering from the click that opened the box
+        setTimeout(() => {
+            if (!resolved) {
+                currentDialogueClickHandler = clickHandler;
+                document.addEventListener("click", clickHandler);
+            }
+        }, 100);
+
+        //auto-advance only for optional dialogues with a delay
+        if (!requireClick && ms !== null) {
+            timeoutId = setTimeout(finish, ms);
+        }
+        //if requireClick is true, no timeout, must click to proceed
     });
 }
 
@@ -627,9 +699,9 @@ function playerRevealCard(matchingCards){
                         c.onclick = null;
                     });
                     hideRevealedCardBox();
-                    await new Promise(resolve => setTimeout(resolve, 200)); //wait before showing
+                    await dialogueWait({ ms: 200 }); //wait before showing
                     showRevealedCardBox(playerPawn, `You showed `, cardName, true); //display chosen card
-                    await waitForClick(); //wait for player click
+                    await dialogueWait({ requireClick: true }); //wait for player click
                     hideRevealedCardBox();
                     resolve(cardName);
                 };
@@ -720,3 +792,99 @@ function initCPUNotebooks(){
         });
     });
 }
+
+//create board pawn divs to render into room locations
+function createBoardPawns(){
+    turnOrder.forEach(pawn => {
+        const pawnDiv = document.createElement("div");
+        pawnDiv.classList.add("board-pawn");
+        pawnDiv.dataset.pawn = pawn;
+        pawnDiv.style.backgroundColor = pawnColors[pawn];
+
+        //init locations to their corresponding start positions
+        const pos = pawnPositions[pawn];
+        pawnDiv.style.left = `${pos.x}%`;
+        pawnDiv.style.top = `${pos.y}%`;
+        document.getElementById("game-board-container").appendChild(pawnDiv);
+    })
+}
+
+//render pawn moves on the game board
+function renderPawnPosition(pawn){
+    const pawnDiv = document.querySelector(`.board-pawn[data-pawn="${pawn}"]`);
+    const pawnData = pawnPositions[pawn];
+    if (!pawnData) return;
+
+    const roomName = pawnLocations[pawn];
+    if (!roomName) {
+        if (debug) console.warn("Pawn has no room yet:", pawn);
+        return;
+    }
+
+    const roomId = Object.keys(roomIdToName)
+        .find(id => roomIdToName[id] === roomName);
+
+    if (!roomId) {
+        if (debug) console.warn("No roomId found for room:", roomName);
+        return;
+    }
+
+    const roomDiv = document.getElementById(roomId);
+    const boardDiv = document.getElementById("game-board-container");
+
+    //get bounding boxes
+    const roomRect = roomDiv.getBoundingClientRect();
+    const boardRect = boardDiv.getBoundingClientRect();
+
+    //random offset so pawns dont stack
+    const {xPct , yPct} = pawnData.pos ?? getFreePosition(pawnData.room, roomRect);
+
+    pawnData.pos = {xPct , yPct};
+
+    const pawnSize = pawnDiv.offsetWidth;
+
+    const x = xPct * (roomRect.width - pawnSize);
+    const y = yPct * (roomRect.height - pawnSize);
+
+    const left = roomRect.left - boardRect.left + x;
+    const top = roomRect.top - boardRect.top + y;
+
+    pawnDiv.style.left = `${left}px`;
+    pawnDiv.style.top = `${top}px`;
+
+    //render pawn inside room
+    boardDiv.appendChild(pawnDiv);
+}
+
+//helper function for pawn collision detection in room position rendering
+function getFreePosition(roomName, roomRect){
+    if (!roomOccupancy[roomName]){
+        roomOccupancy[roomName] = [];
+    }
+
+    //max attempts to detect free pos.
+    const attempts = 20;
+
+    for (let i = 0; i < attempts; i++){
+        const xPct = Math.random() * 0.9;
+        const yPct = Math.random() * 0.9;
+
+        const tooClose = roomOccupancy[roomName].some(pos => {
+            const dx = pos.xPct - xPct;
+            const dy = pos.yPct - yPct;
+            return Math.sqrt(dx * dx + dy * dy) < 0.1;
+        });
+
+        if (!tooClose){
+            roomOccupancy[roomName].push({ xPct , yPct});
+            return {xPct , yPct};
+        }
+    }
+
+    //fallback if room is too cluttered
+    return {xPct: 0.05, yPct: 0.05};
+}
+
+window.addEventListener("resize", () => {
+    turnOrder.forEach(renderPawnPosition);
+});

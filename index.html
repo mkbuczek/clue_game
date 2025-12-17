@@ -9,7 +9,7 @@
 <body>
 
     <div id="setup-container">
-        <h1 style="text-align: center;">Clue v0.4</h1>
+        <h1 style="text-align: center;">Clue v0.5</h1>
 
         <div id="pawn-container">
             <div id="Miss Scarlet" class="pawn" style="background-color: #970000"></div>
@@ -102,6 +102,7 @@
 
             <img src="assets/clue_board.png" alt="Clue Board" id="board-img" draggable="false">
 
+            <div class="room" id="staircase"></div>
             <div class="room" id="hall"></div>
             <div class="room" id="lounge"></div>
             <div class="room" id="dining-room"></div>
@@ -121,7 +122,10 @@
             <h3 id="revealed-card-click-text">Click anywhere to continue</h3>
         </div>
 
-        <div id="player-hand"></div>
+        <div id="hand-container">
+            <div id="hide-hand-btn">Hide</div>
+            <div id="player-hand"></div>
+        </div>
 
     </div>
 
