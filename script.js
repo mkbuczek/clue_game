@@ -73,7 +73,7 @@ const pawnPositions = {
 
 const roomOccupancy = {};
 
-const debug = true;
+const debug = false;
 
 let envelopeArray = [];
 
@@ -86,6 +86,7 @@ let currentTurnIndex = 0;
 let pawnLocations = {};
 
 let cpuNotebooks = {};
+let cpuPersonalities = {};
 
 let roomGuess = null;
 let suspectGuess = null;
@@ -105,7 +106,7 @@ pawns.forEach(pawn => {
 function startGame(){
     //return if user doesn't select a pawn
     if(!playerPawn){
-        console.error("No pawn selected");
+        alert("No pawn selected");
         return;
     }
 
@@ -126,6 +127,21 @@ function startGame(){
 
     turnOrder.forEach(pawn => {
         pawnLocations[pawn] = null;
+    });
+
+    //initialize cpu personalities
+    turnOrder.forEach(pawn => {
+        if (pawn === playerPawn) return; //skip player
+
+        const bluffChance = (Math.random() * 0.35 + 0.05); //5% - 40%
+        const accuseThreshold = (Math.random() * 0.4 + 0.5); //50% - 90%
+
+        cpuPersonalities[pawn] = {
+            bluffChance,
+            accuseThreshold
+        };
+
+        if (debug) console.log(`${pawn} personality: bluff ${(bluffChance*100).toFixed(0)}%, accuse at ${(accuseThreshold*100).toFixed(0)}%`);
     });
 
     //setup functions
@@ -151,6 +167,7 @@ function resetGame(){
     currentTurnIndex = 0;
     turnOrder = [];
     cpuNotebooks = {};
+    cpuPersonalities = {};
     envelopeArray = [];
 
     //player guesses
@@ -158,6 +175,19 @@ function resetGame(){
     weaponGuess = null;
     roomGuess = null;
     playerPawn = null;
+
+    //pawn rendering
+    const boardContainer = document.getElementById("game-board-container");
+    const existingPawns = boardContainer.querySelectorAll(".board-pawn");
+    existingPawns.forEach(pawn => pawn.remove());
+
+    Object.keys(pawnPositions).forEach(pawn => {
+        if (pawnPositions[pawn].pos) {
+            delete pawnPositions[pawn].pos;
+        }
+    });
+
+    Object.keys(roomOccupancy).forEach(room => delete roomOccupancy[room]);
 
     //change visuals
     gameContainer.style.display = "none";
@@ -177,7 +207,7 @@ function generateCrime(){
     const weapon = pickOne(weaponsArray);
     const room = pickOne(roomsArray);
     envelopeArray = [suspect, weapon, room];
-    if(debug) console.log(`Envelope: ${envelopeArray}`); //debug
+    if (debug) console.log(`Envelope: ${envelopeArray}`); //debug
 }
 
 //deals cards to each player's hand until the deck is empty
@@ -286,7 +316,7 @@ function getCurrentPawn(){
 function nextTurn(){
     const currentPawn = getCurrentPawn();
 
-    if(debug) console.log(`It's ${currentPawn}'s turn`); //debug
+    if (debug) console.log(`It's ${currentPawn}'s turn`); //debug
     currentTurnHeader.textContent = `It's ${currentPawn}'s turn`
     highlightCurrentTurnPawn();
 
@@ -296,7 +326,7 @@ function nextTurn(){
         cpuMove(currentPawn);
     }
 
-    if(debug) console.log(cpuNotebooks);
+    if (debug) console.log(cpuNotebooks);
 }
 
 function endTurn(){
@@ -310,7 +340,7 @@ function playerMove(){
     const currentRoom = pawnLocations[playerPawn];
     const availableMoves = getAvailableMoves(playerPawn, currentRoom);
 
-    if(debug) console.log(`${playerPawn} can move to: ${availableMoves.join(", ")}`);
+    if (debug) console.log(`${playerPawn} can move to: ${availableMoves.join(", ")}`);
 
     document.querySelectorAll(".room").forEach(room => {
         const roomName = roomIdToName[room.id];
@@ -335,7 +365,37 @@ async function cpuMove(currentPawn){
     //move to a room
     const currentRoom = pawnLocations[currentPawn];
     const availableRooms = getAvailableMoves(currentPawn, currentRoom);
-    const chosenRoom = pickOne(availableRooms);
+    
+    //score each room: cpu prefers unknown rooms + ones others dont have
+    const roomScores = availableRooms.map(room => {
+        const notebook = cpuNotebooks[currentPawn];
+        const cardInfo = notebook.cards[room];
+        const dontHaveCount = notebook.playersWhoDontHaveIt[room]?.size || 0;
+
+        let score = 1; //base score
+
+        if (!cardInfo.eliminated){
+            score += 3; //unknown room
+        }
+
+        score += dontHaveCount * 2; //multiply score if others dont have it
+
+        return { room, score };
+    });
+
+    const totalScore = roomScores.reduce((sum, r) => sum + r.score, 0);
+    let random = Math.random() * totalScore;
+    let chosen = roomScores[0].room;
+
+    for (const { room, score } of roomScores){
+        random -= score;
+        if (random <= 0){
+            chosen = room;
+            break;
+        }
+    }
+
+    const chosenRoom = chosen;
 
     //update location
     pawnLocations[currentPawn] = chosenRoom;
@@ -347,7 +407,45 @@ async function cpuMove(currentPawn){
     hideRevealedCardBox();
     await dialogueWait({ ms: 1500 });
 
-    //cpu guesses
+    //check if cpu can accuse
+    const accusation = cpuCanAccuse(currentPawn);
+
+    //final accusation!
+    if (accusation){
+        showRevealedCardBox(currentPawn, "I know who did it!", null, true);
+        await dialogueWait({ requireClick: true });
+        showRevealedCardBox(currentPawn, `It was ${accusation.suspect} with the ${accusation.weapon} in the ${accusation.room}!`, null, true);
+        await dialogueWait({ requireClick: true });
+        hideRevealedCardBox();
+
+        //check if correct
+        const cpuCorrect =
+            accusation.suspect === envelopeArray[0] &&
+            accusation.weapon  === envelopeArray[1] &&
+            accusation.room    === envelopeArray[2];
+
+        //set winLoseText
+        const winLoseText = document.getElementById("win-lose-text");
+        if (cpuCorrect) {
+            winLoseText.textContent = "You lose";
+            winLoseText.style.color = "maroon";
+        } else {
+            winLoseText.textContent = "You win!";
+            winLoseText.style.color = "lime";
+        }
+        
+        //show result
+        showRevealedCardBox(null, cpuCorrect ? "The accusation is correct! CPU wins!" : "Wrong! The CPU loses.", null, true);
+        await dialogueWait({ requireClick: true });
+        hideRevealedCardBox();
+
+        //show envelope
+        await openEnvelope(envelopeArray, false);
+
+        //game over!
+        return;
+    }
+
     const guess = generateCPUGuess(currentPawn, chosenRoom);
 
     //show guess
@@ -365,31 +463,74 @@ async function cpuMove(currentPawn){
 }
 
 function generateCPUGuess(pawn, currentRoom){
-    const notebook = cpuNotebooks[pawn].cards;
+    const notebook = cpuNotebooks[pawn];
+    const cards = notebook.cards;
+    const probs = notebook.envelopeProb;
+    const dontHave = notebook.playersWhoDontHaveIt;
 
     //safe: in cpu hand or seen & eliminated
-    const safeSuspects = suspectsArray.filter(s => notebook[s].eliminated);
-    const safeWeapons = weaponsArray.filter(w => notebook[w].eliminated);
+    const safeSuspects = suspectsArray.filter(s => cards[s].eliminated);
+    const safeWeapons = weaponsArray.filter(w => cards[w].eliminated);
 
     //unknown: never seen
-    const unknownSuspects = suspectsArray.filter(s => !notebook[s].eliminated);
-    const unknownWeapons = weaponsArray.filter(w => !notebook[w].eliminated);
+    const unknownSuspects = suspectsArray.filter(s => !cards[s].eliminated);
+    const unknownWeapons = weaponsArray.filter(w => !cards[w].eliminated);
 
-    //20% chance to bluff and guess cards in hand
-    const bluffChance = Math.random() < 0.2;
+    //bluffs if rng is < bluffChance
+    const bluffChance = Math.random() < cpuPersonalities[pawn].bluffChance;
+    if (debug && bluffChance) console.log(`${pawn} is bluffing!`);
 
-    if(bluffChance) console.log(`${pawn} is bluffing!`);
+    //cpu picks highest prob from unknowns
+    let suspect;
+    if (bluffChance && safeSuspects.length > 0) {
+        suspect = safeSuspects.reduce((best, s) => probs[s] > probs[best] ? s : best, safeSuspects[0]);
+    } else {
+        suspect = unknownSuspects.reduce((best, s) => probs[s] > probs[best] ? s : best, unknownSuspects[0] || suspectsArray[0]);
+    }
 
-    //cpu prefers safe => then unknown => then falls back to any
-    const suspect = bluffChance && safeSuspects.length > 0
-        ? pickOne(safeSuspects)
-        : pickOne(unknownSuspects.length > 0 ? unknownSuspects : suspectsArray);
+    let weapon;
+    if (bluffChance && safeWeapons.length > 0) {
+        weapon = safeWeapons.reduce((best, w) => probs[w] > probs[best] ? w : best, safeWeapons[0]);
+    } else {
+        weapon = unknownWeapons.reduce((best, w) => probs[w] > probs[best] ? w : best, unknownWeapons[0] || weaponsArray[0]);
+    }
 
-    const weapon = bluffChance && safeWeapons.length > 0
-        ? pickOne(safeWeapons)
-        : pickOne(unknownWeapons.length > 0 ? unknownWeapons : weaponsArray);
+    //cpu prefers cards not in others' hands
+    const goodSuspect = suspectsArray.find(s => !cards[s].eliminated && dontHave[s].size > 0 && probs[s] > 0.1);
+    if (goodSuspect) suspect = goodSuspect;
+
+    const goodWeapon = weaponsArray.find(w => !cards[w].eliminated && dontHave[w].size > 0 && probs[w] > 0.1);
+    if (goodWeapon) weapon = goodWeapon;
 
     return { suspect, weapon, room: currentRoom };
+}
+
+function cpuCanAccuse(pawn){
+    const notebook = cpuNotebooks[pawn];
+    const cards = notebook.cards;
+    const probs = notebook.envelopeProb;
+    
+    //count how many of each category are still possible
+    const possibleSuspects = suspectsArray.filter(s => !cards[s].eliminated);
+    const possibleWeapons  = weaponsArray.filter(w => !cards[w].eliminated);
+    const possibleRooms    = roomsArray.filter(r => !cards[r].eliminated);
+
+    //cpu has exactly one possibility in each category
+    const topSuspectProb = Math.max(...possibleSuspects.map(s => probs[s]));
+    const topWeaponProb  = Math.max(...possibleWeapons.map(w => probs[w]));
+    const topRoomProb    = Math.max(...possibleRooms.map(r => probs[r]));
+
+    //accuses if the probabilities are high enough
+    const threshold = cpuPersonalities[pawn].accuseThreshold;
+    if (topSuspectProb > threshold && topWeaponProb > threshold && topRoomProb > threshold) {
+        return {
+            suspect: possibleSuspects.reduce((best, s) => probs[s] > probs[best] ? s : best, possibleSuspects[0]),
+            weapon:  possibleWeapons.reduce((best, w) => probs[w] > probs[best] ? w : best, possibleWeapons[0]),
+            room:    possibleRooms.reduce((best, r) => probs[r] > probs[best] ? r : best, possibleRooms[0])
+        };
+    }
+
+    return null; //not ready to accuse
 }
 
 function updateCPUNotebook(guesser, guessArray, revealedInfo){
@@ -402,11 +543,102 @@ function updateCPUNotebook(guesser, guessArray, revealedInfo){
         entry.seen = true;
         entry.holder = revealedInfo.player;
         entry.eliminated = true;
+        //remove from dontHave if it was there
+        notebook.playersWhoDontHaveIt[card].delete(revealedInfo.player);
+
+        //revealed cards have 0 envelopeProb
+        notebook.envelopeProb[card] = 0.0;
+        renormalizeProbs(notebook, [suspectsArray, weaponsArray, roomsArray]);
     } else {
+        //no one showed a card!
+        const guessingIndex = turnOrder.indexOf(guesser);
+
+        for (let i = 1; i < turnOrder.length; i++){
+            const playerIndex = (guessingIndex + i) % turnOrder.length;
+            const player = turnOrder[playerIndex];
+            //dont mark the guesser
+            if (player === guesser) continue;
+
+            guessArray.forEach(card => {
+                notebook.playersWhoDontHaveIt[card].add(player);
+                notebook.cards[card].possibleEnvelope = true;
+            });
+        }
+
         guessArray.forEach(card => {
-            notebook.cards[card].possibleEnvelope = true;
+            notebook.envelopeProb[card] = Math.min(1.0, notebook.envelopeProb[card] + 0.25);
         });
+        renormalizeProbs(notebook, [suspectsArray, weaponsArray, roomsArray]);
     }
+}
+
+function initCPUNotebooks(){
+    cpuNotebooks = {};
+
+    turnOrder.forEach(pawn => {
+        if (pawn === playerPawn) return; //skip human player
+
+        //init each cpu notebook
+        cpuNotebooks[pawn] = {
+            cards: {},
+            guesses: [],
+            hand: new Set(playerHands[pawn]),
+            playersWhoDontHaveIt: {},
+            envelopeProb: {}
+        };
+
+        //init all cards as unknown
+        allCardsArray.forEach(card => {
+            const inHand = cpuNotebooks[pawn].hand.has(card);
+
+            cpuNotebooks[pawn].cards[card] = {
+                eliminated: inHand,
+                holder: inHand ? pawn : null,
+                possibleEnvelope: false,
+            };
+
+            cpuNotebooks[pawn].playersWhoDontHaveIt[card] = new Set();
+
+            let categorySize;
+            if (suspectsArray.includes(card)) categorySize = suspectsArray.length;
+            else if (weaponsArray.includes(card)) categorySize = weaponsArray.length;
+            else categorySize = roomsArray.length;
+
+            cpuNotebooks[pawn].envelopeProb[card] = inHand ? 0.0 : 1.0 / categorySize;
+        });
+    });
+}
+
+//normalize probabilities after a deduction
+function renormalizeProbs(notebook, categories){
+    //keep probs summing to 1.0 per category
+    categories.forEach(category => {
+        let total = 0;
+        const activeCards = [];
+
+        //only count cards with non-zero probability
+        category.forEach(card => {
+            const prob = notebook.envelopeProb[card] || 0;
+            if (prob > 0) {
+                total += prob;
+                activeCards.push(card);
+            }
+        });
+
+        //normalize
+        if (total > 0 && activeCards.length > 0){
+            activeCards.forEach(card => {
+                notebook.envelopeProb[card] /= total;
+            });
+        }
+
+        //explicitly zero out eliminated cards
+        category.forEach(card => {
+            if (notebook.cards[card].eliminated){
+                notebook.envelopeProb[card] = 0.0;
+            }
+        });
+    });
 }
 
 //removes highlight styles and displays guess HUD when a room is clicked
@@ -500,7 +732,7 @@ weaponBtns.forEach(btn => {
 async function submitGuess(guess = true){
     //check if weapon and suspect are selected
     if (!suspectGuess || !weaponGuess || !roomGuess){
-        console.error("Please select a suspect, weapon, and room.")
+        alert("Please select a suspect, weapon, and room.")
         return;
     }
 
@@ -511,7 +743,7 @@ async function submitGuess(guess = true){
     weaponLabel.textContent = `Weapon: ???`;
 
     let guessArray = [suspectGuess, weaponGuess, roomGuess];
-    console.log(guessArray);
+    if (debug) console.log(guessArray);
 
     //reset HUD
     guessHUD.style.display = "none";
@@ -724,12 +956,12 @@ function showEnvelopeHUD(guessArray){
     accuseText.textContent = `${suspect} with the ${weapon} in the ${room}`;
 
     envelope.addEventListener("click", () => {
-        openEnvelope(guessArray);
+        openEnvelope(guessArray, true);
         envelopeHUD.style.display = "none";
     });
 }
 
-async function openEnvelope(guessArray){
+async function openEnvelope(guessArray, isPlayerAccusation = true){
     const sCard = document.getElementById("env-s-card");
     const wCard = document.getElementById("env-w-card");
     const rCard = document.getElementById("env-r-card");
@@ -743,14 +975,15 @@ async function openEnvelope(guessArray){
     wCard.textContent = envelopeArray[1];
     rCard.textContent = envelopeArray[2];
 
-    //envelope is the same as accusation; player wins!
-    if (JSON.stringify(guessArray) === JSON.stringify(envelopeArray)) {
-        winLoseText.textContent = "You win!";
-        winLoseText.style.color = "lime";
-    } else {
-        //player loses
-        winLoseText.textContent = "You lose";
-        winLoseText.style.color = "maroon";
+    //only auto-set text if player accusation
+    if (isPlayerAccusation) {
+        if (JSON.stringify(guessArray) === JSON.stringify(envelopeArray)) {
+            winLoseText.textContent = "You win!";
+            winLoseText.style.color = "lime";
+        } else {
+            winLoseText.textContent = "You lose";
+            winLoseText.style.color = "maroon";
+        }
     }
 
     //close HUD when user clicks
@@ -765,32 +998,6 @@ async function openEnvelope(guessArray){
     envelopeHUD.style.display = "none";
     //reset the game!
     resetGame();
-}
-
-function initCPUNotebooks(){
-    cpuNotebooks = {};
-
-    turnOrder.forEach(pawn => {
-        if (pawn === playerPawn) return; //skip human player
-
-        //init each cpu notebook
-        cpuNotebooks[pawn] = {
-            cards: {},
-            guesses: [],
-            hand: new Set(playerHands[pawn])
-        };
-
-        //init all cards as unknown
-        allCardsArray.forEach(card => {
-            const inHand = cpuNotebooks[pawn].hand.has(card);
-
-            cpuNotebooks[pawn].cards[card] = {
-                eliminated: inHand,
-                holder: inHand ? pawn : null,
-                possibleEnvelope: false,
-            };
-        });
-    });
 }
 
 //create board pawn divs to render into room locations
@@ -817,7 +1024,6 @@ function renderPawnPosition(pawn){
 
     const roomName = pawnLocations[pawn];
     if (!roomName) {
-        if (debug) console.warn("Pawn has no room yet:", pawn);
         return;
     }
 
@@ -825,7 +1031,6 @@ function renderPawnPosition(pawn){
         .find(id => roomIdToName[id] === roomName);
 
     if (!roomId) {
-        if (debug) console.warn("No roomId found for room:", roomName);
         return;
     }
 

@@ -410,6 +410,7 @@ body{
     border-radius: 12px;
     backdrop-filter: blur(5px);
     text-align: center;
+    z-index: 50;
 }
 
 .envelope-card{
