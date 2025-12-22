@@ -501,10 +501,101 @@ body{
     align-items: center;
     justify-content: center;
     transition: 0.3s;
+    border: 2px solid white;
 }
 
 #hide-hand-btn:hover{
     filter: brightness(0.8);
+}
+
+#notebook-toggle-btn{
+    writing-mode: vertical-rl;
+    background: #2c3e50;
+    color: white;
+    padding: 15px 10px;
+    border: 1px solid white;
+    border-radius: 0 10px 10px 0;
+    cursor: pointer;
+    font-size: 1.2em;
+    height: fit-content;
+    box-sizing: border-box;
+}
+
+#notebook-header{
+    text-align: center;
+    font-size: 0.8em;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+#notebook-content{
+    display: flex;
+    flex-direction: column;
+    background: hsla(210, 29%, 24%, 0.6);
+    color: white;
+    padding: 5px 5px;
+    border: 2px solid white;
+    border-radius: 0 10px 10px 0;
+    box-sizing: border-box;
+    width: 200px;
+    backdrop-filter: blur(5px);
+}
+
+#notebook-panel{
+    display: flex;
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    align-items: center;
+    z-index: 100;
+}
+
+.notebook-table{
+    width: 100%;
+    border-collapse: separate;
+    margin: 0px;
+    background-color: hsla(210, 29%, 29%, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    backdrop-filter: blur(5px);
+}
+
+.notebook-table th,
+.notebook-table td {
+    padding: 3px;
+    text-align: left;
+    border-bottom: 1px solid #4a6078;
+}
+
+.notebook-table td.card-name {
+    text-align: left;
+}
+
+.notebook-table td.card-status {
+    text-align: right;
+}
+
+.notebook-cat-header{
+    text-align: center;
+    margin: 5px;
+}
+
+.card-status.eliminated {
+    color: #e74c3c; 
+    font-weight: bold;
+}
+
+.card-status.unknown {
+    color: #3498db; 
+    font-weight: bold;
+}
+
+.card-name.eliminated {
+    text-decoration: line-through;
+    color: #7f8c8d;   /* Grayed out */
+    font-style: italic;
 }
 
 #hall { top: 5%; left: 40%; width: 18.5%; height: 20%; }

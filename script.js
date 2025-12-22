@@ -11,9 +11,9 @@ const gamePawnContainer = document.getElementById("game-pawn-container");
 const difficultySelect = document.getElementById("difficulty-select");
 const difficultyDesc = document.getElementById("difficulty-desc");
 
-//TODO: notebook implementation (with keybind)
-//difficulty tweaking
+//TODO:
 //visual overhaul
+//cpu loses (remove from game)
 
 const suspectsArray = ["Miss Scarlet", "Professor Plum", "Mrs. Peacock",
     "Mr. Green", "Colonel Mustard", "Mrs. White"];
@@ -108,6 +108,8 @@ let suspectGuess = null;
 let weaponGuess = null;
 let guessBtnHandler = null;
 
+let playerSeenCards = new Set();
+
 pawns.forEach(pawn => {
     pawn.addEventListener("click", () => {
         pawns.forEach(pawn => pawn.classList.remove("selected-pawn")); //remove class on each click
@@ -186,6 +188,7 @@ function startGame(){
     highlightCurrentTurnPawn();
     initCPUNotebooks();
     createBoardPawns();
+    renderPlayerNotebook();
 
     setupContainer.style.display = "none"; //hide setup container
     gameContainer.style.display = "flex"; //display game container
@@ -203,6 +206,7 @@ function resetGame(){
     cpuNotebooks = {};
     cpuPersonalities = {};
     envelopeArray = [];
+    playerSeenCards = new Set();
 
     //player guesses
     suspectGuess = null;
@@ -305,9 +309,28 @@ hideBtn.addEventListener("click", () => {
     //show hand if hidden
     } else {
         handDiv.style.display = "flex";
-        hideBtn.textContent = "Hide";
+        hideBtn.textContent = "Hide (H)";
     }
 })
+
+//keybind for hide hand btn
+document.addEventListener("keydown", (event) => {
+    if (event.key.toLowerCase() === "h" && 
+        !event.ctrlKey && !event.altKey && !event.metaKey && 
+        document.activeElement === document.body) {
+        
+        //toggle visibility
+        if (handDiv.style.display === "none") {
+            handDiv.style.display = "flex";
+            hideBtn.textContent = "Hide (H)";
+        } else {
+            handDiv.style.display = "none";
+            hideBtn.textContent = "Show";
+        }
+
+        event.preventDefault(); //prevent n from typing
+    }
+});
 
 //difficulty desc logic
 difficultySelect.addEventListener("change", () => {
@@ -821,6 +844,9 @@ async function findMatchingCard(guessArray, isPlayerGuess = false){
                 //reveal card to player if it is a player guess
                 if (isPlayerGuess){
                     showRevealedCardBox(player, `showed you: `, chosenCard, true); //display chosen card
+                    //render the revealed card
+                    playerSeenCards.add(chosenCard);
+                    renderPlayerNotebook();
                     await dialogueWait({ requireClick: true }); //wait for player click
                     hideRevealedCardBox();
                 } else {
@@ -1167,6 +1193,70 @@ function findSmartPath(pawn){
     if (debug) console.log(`${pawn} pathfinds to ${bestFirstMove} (best path score: ${bestPathScore.toFixed(1)})`);
     
     return bestFirstMove;
+}
+
+//player notebook logic
+const notebookToggleBtn = document.getElementById("notebook-toggle-btn");
+const notebookContent = document.getElementById("notebook-content");
+
+notebookToggleBtn.addEventListener("click", () => {
+    //hide notebook if displayed
+    if(notebookContent.style.display !== "none"){
+        notebookContent.style.display = "none";
+    //show hand if hidden
+    } else {
+        notebookContent.style.display = "flex";
+    }
+});
+
+//keybind for notebook
+document.addEventListener("keydown", (event) => {
+    if (event.key.toLowerCase() === "n" && 
+        !event.ctrlKey && !event.altKey && !event.metaKey && 
+        document.activeElement === document.body) {
+        
+        //toggle visibility
+        if (notebookContent.style.display === "none" || notebookContent.style.display === "") {
+            notebookContent.style.display = "flex";
+        } else {
+            notebookContent.style.display = "none";
+        }
+
+        event.preventDefault(); //prevent n from typing
+    }
+});
+
+function renderPlayerNotebook(){
+    const playerHandSet = new Set(playerHands[playerPawn] || []);
+    const allEliminated = new Set([...playerHandSet, ...playerSeenCards]);
+
+    const categories = [
+        { id: "suspects-table", list: suspectsArray },
+        { id: "weapons-table", list: weaponsArray },
+        { id: "rooms-table", list: roomsArray }
+    ];
+
+    categories.forEach(cat => {
+        const table = document.getElementById(cat.id);
+        if (!table) return;
+
+        table.innerHTML = "";
+
+        cat.list.forEach(card => {
+            const isEliminated = allEliminated.has(card);
+
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td class="card-name ${isEliminated ? 'eliminated' : ''}">${card}</td>
+                <td class="card-status ${isEliminated ? 'eliminated' : 'unknown'}">
+                    ${isEliminated ? '✗' : '?'}
+                </td>
+            `;
+
+            table.appendChild(row);
+        });
+    });
 }
 
 //pawns remain on the board when window is resized

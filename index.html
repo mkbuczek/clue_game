@@ -9,7 +9,7 @@
 <body>
 
     <div id="setup-container">
-        <h1 style="text-align: center;">Clue v0.7</h1>
+        <h1 style="text-align: center;">Clue v0.8</h1>
 
         <div id="pawn-container">
             <div id="Miss Scarlet" class="pawn" style="background-color: #970000"></div>
@@ -44,6 +44,28 @@
         <h2 id="current-turn-header"></h2>
 
         <div id="game-pawn-container"></div>
+
+        <div id="notebook-panel">
+
+            <div id="notebook-content" style="display: none">
+                <div class="notebook-section">
+                    <h3 class="notebook-cat-header">Suspects</h3>
+                    <table class="notebook-table" id="suspects-table"></table>
+                </div>
+                <div class="notebook-section">
+                    <h3 class="notebook-cat-header">Weapons</h3>
+                    <table class="notebook-table" id="weapons-table"></table>
+                </div>
+                <div class="notebook-section">
+                    <h3 class="notebook-cat-header">Rooms</h3>
+                    <table class="notebook-table" id="rooms-table"></table>
+                </div>
+                <h2 id="notebook-header">(Press N)</h2>
+            </div>
+
+            <button id="notebook-toggle-btn">Notebook</button>
+
+        </div>
 
         <div id="game-board-container">
 
@@ -133,7 +155,7 @@
         </div>
 
         <div id="hand-container">
-            <div id="hide-hand-btn">Hide</div>
+            <div id="hide-hand-btn">Hide (H)</div>
             <div id="player-hand"></div>
         </div>
 
