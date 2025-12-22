@@ -8,6 +8,12 @@ const guessHUD = document.getElementById("guess-hud");
 const guessAccuseHUD = document.getElementById("guess-accuse-hud");
 const envelopeHUD = document.getElementById("envelope-hud");
 const gamePawnContainer = document.getElementById("game-pawn-container");
+const difficultySelect = document.getElementById("difficulty-select");
+const difficultyDesc = document.getElementById("difficulty-desc");
+
+//TODO: notebook implementation (with keybind)
+//difficulty tweaking
+//visual overhaul
 
 const suspectsArray = ["Miss Scarlet", "Professor Plum", "Mrs. Peacock",
     "Mr. Green", "Colonel Mustard", "Mrs. White"];
@@ -71,9 +77,18 @@ const pawnPositions = {
     "Professor Plum": { x: 3.5, y: 20.5 },
 };
 
+const difficultyDescriptions = {
+    easy: "CPUs play cautiously: low bluffing and accuse only when highly confident.",
+    medium: "CPUs are smart but fair: moderate bluffing and confidence. A balanced challenge.",
+    hard: "CPUs are ruthless: frequent bluffs and accuse aggressively."
+};
+
+const difficultyColors = { easy: "#4caf50", medium: "#ff9800", hard: "#f44336" };
+let difficulty = "easy";
+
 const roomOccupancy = {};
 
-const debug = false;
+const debug = true;
 
 let envelopeArray = [];
 
@@ -111,6 +126,7 @@ function startGame(){
     }
 
     playerAmt = document.getElementById("player-select-box").value; //get num of players
+    difficulty = difficultySelect.value; //get difficulty
     let availableSuspects = [...suspectsArray].filter(name => name !== playerPawn); //remove player pawn from array
     let cpuPawns = []; //new array for randomly chosen cpu pawns
 
@@ -130,11 +146,29 @@ function startGame(){
     });
 
     //initialize cpu personalities
+    let bluffMin, bluffMax, threshMin, threshMax;
+    //random ranges based on difficulty
+    if (debug) console.log(`Selected ${difficulty} difficulty.`);
+    switch(difficulty){
+        case "easy":
+            bluffMin = 0.05; bluffMax = 0.2;
+            threshMin = 0.8; threshMax = 0.9
+            break;
+        case "medium":
+            bluffMin = 0.1; bluffMax = 0.25;
+            threshMin = 0.7; threshMax = 0.8;
+            break;
+        case "hard":
+            bluffMin = 0.15; bluffMax = 0.3;
+            threshMin = 0.6; threshMax = 0.7;
+        break;
+    }
+
     turnOrder.forEach(pawn => {
         if (pawn === playerPawn) return; //skip player
 
-        const bluffChance = (Math.random() * 0.35 + 0.05); //5% - 40%
-        const accuseThreshold = (Math.random() * 0.4 + 0.5); //50% - 90%
+        const bluffChance = Math.random() * (bluffMax - bluffMin) + bluffMin;
+        const accuseThreshold = Math.random() * (threshMax-threshMin) + threshMin;
 
         cpuPersonalities[pawn] = {
             bluffChance,
@@ -275,6 +309,13 @@ hideBtn.addEventListener("click", () => {
     }
 })
 
+//difficulty desc logic
+difficultySelect.addEventListener("change", () => {
+    const selected = difficultySelect.value;
+    difficultyDesc.textContent = difficultyDescriptions[selected];
+    difficultyDesc.style.color = difficultyColors[selected];
+});
+
 //renders the turn order pawns above the game board
 function renderTurnOrder(turnOrder){
     gamePawnContainer.innerHTML = ""; //clear previous pawns
@@ -362,40 +403,7 @@ async function cpuMove(currentPawn){
     hideRevealedCardBox();
     await dialogueWait({ ms: 1500 });
 
-    //move to a room
-    const currentRoom = pawnLocations[currentPawn];
-    const availableRooms = getAvailableMoves(currentPawn, currentRoom);
-    
-    //score each room: cpu prefers unknown rooms + ones others dont have
-    const roomScores = availableRooms.map(room => {
-        const notebook = cpuNotebooks[currentPawn];
-        const cardInfo = notebook.cards[room];
-        const dontHaveCount = notebook.playersWhoDontHaveIt[room]?.size || 0;
-
-        let score = 1; //base score
-
-        if (!cardInfo.eliminated){
-            score += 3; //unknown room
-        }
-
-        score += dontHaveCount * 2; //multiply score if others dont have it
-
-        return { room, score };
-    });
-
-    const totalScore = roomScores.reduce((sum, r) => sum + r.score, 0);
-    let random = Math.random() * totalScore;
-    let chosen = roomScores[0].room;
-
-    for (const { room, score } of roomScores){
-        random -= score;
-        if (random <= 0){
-            chosen = room;
-            break;
-        }
-    }
-
-    const chosenRoom = chosen;
+    const chosenRoom = findSmartPath(currentPawn);
 
     //update location
     pawnLocations[currentPawn] = chosenRoom;
@@ -558,13 +566,14 @@ function updateCPUNotebook(guesser, guessArray, revealedInfo){
             const player = turnOrder[playerIndex];
             //dont mark the guesser
             if (player === guesser) continue;
-
+            //add each player as not having the cards
             guessArray.forEach(card => {
                 notebook.playersWhoDontHaveIt[card].add(player);
                 notebook.cards[card].possibleEnvelope = true;
             });
         }
 
+        //0.25 boost for not being shown
         guessArray.forEach(card => {
             notebook.envelopeProb[card] = Math.min(1.0, notebook.envelopeProb[card] + 0.25);
         });
@@ -599,11 +608,12 @@ function initCPUNotebooks(){
 
             cpuNotebooks[pawn].playersWhoDontHaveIt[card] = new Set();
 
+            //set uniform probability by category size
             let categorySize;
             if (suspectsArray.includes(card)) categorySize = suspectsArray.length;
             else if (weaponsArray.includes(card)) categorySize = weaponsArray.length;
             else categorySize = roomsArray.length;
-
+            //0 prob if card is in hand
             cpuNotebooks[pawn].envelopeProb[card] = inHand ? 0.0 : 1.0 / categorySize;
         });
     });
@@ -625,7 +635,7 @@ function renormalizeProbs(notebook, categories){
             }
         });
 
-        //normalize
+        //normalize; scale to 1.0
         if (total > 0 && activeCards.length > 0){
             activeCards.forEach(card => {
                 notebook.envelopeProb[card] /= total;
@@ -1090,6 +1100,76 @@ function getFreePosition(roomName, roomRect){
     return {xPct: 0.05, yPct: 0.05};
 }
 
+function findSmartPath(pawn){
+    const notebook = cpuNotebooks[pawn];
+    const probs = notebook.envelopeProb || {};
+    const dontHave = notebook.playersWhoDontHaveIt || {};
+    let depth;
+
+    //depth search based on difficulty
+    switch (difficulty) {
+        case "easy":
+            depth = 1;
+            break;
+        case "medium":
+            depth = 2;
+            break;
+        case "hard":
+            depth = 4;
+            break;
+        default:
+            depth = 2;
+    }
+
+    //score each room
+    function pathfind(room){
+        let score = 1; //base score
+        const card = notebook.cards[room];
+        if (!card?.eliminated) score += 10; //unknown rooms are top priority
+        score += (dontHave[room]?.size || 0) * 5; //dontHave bonus
+        score += (probs[room] || 0) * 20; //highest weight goes to high prob rooms
+        return score;
+    }
+
+    //BFS with priority score queue
+    const currentRoom = pawnLocations[pawn] || null;
+    const startRooms = getAvailableMoves(pawn, currentRoom);
+
+    let bestFirstMove = startRooms[0];
+    let bestPathScore = 0;
+
+    for (const firstRoom of startRooms){
+        const queue = [{ room: firstRoom, depth: 1, pathScore: pathfind(firstRoom), visited: new Set([firstRoom]) }];
+        let localBest = pathfind(firstRoom); //best score starting in this room
+
+        while (queue.length > 0 && queue[0].depth <= depth){
+            const { room, depth, pathScore, visited } = queue.shift();
+
+            const nextRooms = getAvailableMoves(pawn, room).filter(r => !visited.has(r)); //avoid cycles by filtering
+            
+            for (const next of nextRooms){
+                const newScore = pathScore + pathfind(next) * Math.pow(0.9, depth); //further rooms = less score
+                if (newScore > localBest) localBest = newScore;
+
+                const newVisited = new Set(visited);
+                newVisited.add(next);
+                queue.push({ room: next, depth: depth + 1, pathScore: newScore, visited: newVisited });
+            }
+        }
+
+        //if this first move leads to better future move, update
+        if (localBest > bestPathScore){
+            bestPathScore = localBest;
+            bestFirstMove = firstRoom;
+        }
+    }
+
+    if (debug) console.log(`${pawn} pathfinds to ${bestFirstMove} (best path score: ${bestPathScore.toFixed(1)})`);
+    
+    return bestFirstMove;
+}
+
+//pawns remain on the board when window is resized
 window.addEventListener("resize", () => {
     turnOrder.forEach(renderPawnPosition);
 });

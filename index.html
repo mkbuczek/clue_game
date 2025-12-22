@@ -9,7 +9,7 @@
 <body>
 
     <div id="setup-container">
-        <h1 style="text-align: center;">Clue v0.6</h1>
+        <h1 style="text-align: center;">Clue v0.7</h1>
 
         <div id="pawn-container">
             <div id="Miss Scarlet" class="pawn" style="background-color: #970000"></div>
@@ -23,6 +23,16 @@
         <div id="player-select-container">
             <h id="player-select-header">How many players? (2-6)</h>
             <input type="number" id="player-select-box" value="2" min="2" max="6">
+        </div>
+
+        <div id="difficulty-container">
+            <h id="difficulty-header">Difficulty?</h>
+            <select id="difficulty-select">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+            <h3 id="difficulty-desc">CPUs play cautiously: low bluffing and accuse only when highly confident.</h3>
         </div>
 
         <button id="start-btn" onclick="startGame()">Start</button>
