@@ -348,6 +348,7 @@ function renderTurnOrder(turnOrder){
         const color = pawnColors[pawn];
         pawnDiv.style.backgroundColor = color;
         pawnDiv.classList.add("game-pawn");
+
         gamePawnContainer.appendChild(pawnDiv);
     });
 }
@@ -450,31 +451,67 @@ async function cpuMove(currentPawn){
         hideRevealedCardBox();
 
         //check if correct
-        const cpuCorrect =
-            accusation.suspect === envelopeArray[0] &&
-            accusation.weapon  === envelopeArray[1] &&
-            accusation.room    === envelopeArray[2];
-
-        //set winLoseText
-        const winLoseText = document.getElementById("win-lose-text");
-        if (cpuCorrect) {
+        const cpuCorrect = accusation.suspect === envelopeArray[0] &&
+                        accusation.weapon  === envelopeArray[1] &&
+                        accusation.room    === envelopeArray[2];
+        //CPU wins!
+        if (cpuCorrect) {    
+            //set winLoseText
+            const winLoseText = document.getElementById("win-lose-text");
             winLoseText.textContent = "You lose";
             winLoseText.style.color = "maroon";
+            //show result
+            showRevealedCardBox(null, cpuCorrect ? "The accusation is correct! CPU wins!" : "Wrong! The CPU loses.", null, true);
+            await dialogueWait({ requireClick: true });
+            hideRevealedCardBox();
+            //show envelope
+            await openEnvelope(envelopeArray, false);
+            //game over!
+            return;
         } else {
-            winLoseText.textContent = "You win!";
-            winLoseText.style.color = "lime";
+            //CPU loses!
+
+            //show elimination dialogue
+            showRevealedCardBox(null, `${currentPawn} is eliminated! Wrong accusation.`, null, true);
+            await dialogueWait({ requireClick: true });
+            hideRevealedCardBox();
+
+            //hide board pawn
+            const boardPawn = document.querySelector(`.board-pawn[data-pawn="${currentPawn}"]`);
+            if (boardPawn) boardPawn.style.display = "none";
+
+            //remove from turnOrder
+            const cpuIndex = turnOrder.indexOf(currentPawn);
+            if (cpuIndex > -1){
+                turnOrder.splice(cpuIndex, 1);
+            }
+
+            //adjust currentTurnIndex
+            if (cpuIndex !== -1) {
+                currentTurnIndex = cpuIndex - 1;
+            }
+
+            //refresh turn order header
+            renderTurnOrder(turnOrder);
+            highlightCurrentTurnPawn();
+
+            //check if player is last one standing
+            if (turnOrder.length === 1 && turnOrder[0] === playerPawn) {
+                //set winLoseText
+                const winLoseText = document.getElementById("win-lose-text");
+                winLoseText.textContent = "You win!";
+                winLoseText.style.color = "lime";
+                //show dialogue box and open envelope
+                showRevealedCardBox(null, "You win!", null, true);
+                await dialogueWait({ requireClick: true });
+                hideRevealedCardBox();
+                await openEnvelope(envelopeArray, false);
+                return;
+            }
+            //continue game
+            endTurn();
+            return;
         }
-        
-        //show result
-        showRevealedCardBox(null, cpuCorrect ? "The accusation is correct! CPU wins!" : "Wrong! The CPU loses.", null, true);
-        await dialogueWait({ requireClick: true });
-        hideRevealedCardBox();
-
-        //show envelope
-        await openEnvelope(envelopeArray, false);
-
-        //game over!
-        return;
     }
 
     const guess = generateCPUGuess(currentPawn, chosenRoom);
