@@ -5,19 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clue</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="assets/favicon.png">
 </head>
 <body>
 
     <div id="setup-container">
-        <h1 style="text-align: center;">Clue v0.9</h1>
+        <h1 id="game-title">Clue</h1>
 
-        <div id="pawn-container">
-            <div id="Miss Scarlet" class="pawn" style="background-color: #970000"></div>
-            <div id="Professor Plum" class="pawn" style="background-color: #610061"></div>
-            <div id="Mrs. Peacock" class="pawn" style="background-color: #082e96"></div>
-            <div id="Mr. Green" class="pawn" style="background-color: #1c961c"></div>
-            <div id="Colonel Mustard" class="pawn" style="background-color: #dd9803"></div>
-            <div id="Mrs. White" class="pawn" style="background-color: #e6e6e6"></div>
+        <div id="pawn-wrapper">
+            <h id="pawn-header">Select a pawn</h>
+            <div id="pawn-container">
+                <div id="Miss Scarlet" class="pawn" style="background-color: #970000"></div>
+                <div id="Professor Plum" class="pawn" style="background-color: #610061"></div>
+                <div id="Mrs. Peacock" class="pawn" style="background-color: #082e96"></div>
+                <div id="Mr. Green" class="pawn" style="background-color: #1c961c"></div>
+                <div id="Colonel Mustard" class="pawn" style="background-color: #dd9803"></div>
+                <div id="Mrs. White" class="pawn" style="background-color: #e6e6e6"></div>
+            </div>
         </div>
 
         <div id="player-select-container">
@@ -67,91 +71,137 @@
 
         </div>
 
-        <div id="game-board-container">
+        <div id="game-wrapper">
 
-            <div id="open-envelope-hud">
-                <div id="envelope-card-container">
-                    <div class="envelope-card">
-                        <div id="env-s-card" class="envelope-card-header">Test</div>
+            <div id="game-board-container">
+
+                <div id="open-envelope-hud">
+                    <div id="envelope-card-container">
+                        <div class="envelope-card">
+                            <div id="env-s-card" class="envelope-card-header">Test</div>
+                        </div>
+                        <div class="envelope-card">
+                            <div id="env-w-card" class="envelope-card-header">Test</div>
+                        </div>
+                        <div class="envelope-card">
+                            <div id="env-r-card" class="envelope-card-header">Test</div>
+                        </div>
                     </div>
-                    <div class="envelope-card">
-                        <div id="env-w-card" class="envelope-card-header">Test</div>
-                    </div>
-                    <div class="envelope-card">
-                        <div id="env-r-card" class="envelope-card-header">Test</div>
+
+                    <h2 id="win-lose-text">You win!</h2>
+                    <h3 id="envelope-click-text">Click to continue</h3>
+                </div>
+
+                <div id="envelope-hud">
+                    <h2 id="envelope-header">You accused:</h2>
+                    <h3 id="player-accusation-text"></h3>
+                    <div id="envelope-container">
+                        <img id="envelope" src="assets/envelope_img.png" draggable=false></img>
+                        <h3 id="envelope-click-text">Click to open the envelope!</h3>
                     </div>
                 </div>
 
-                <h2 id="win-lose-text">You win!</h2>
-                <h3 id="envelope-click-text">Click to continue</h3>
-            </div>
-
-            <div id="envelope-hud">
-                <h2 id="envelope-header">You accused:</h2>
-                <h3 id="player-accusation-text"></h3>
-                <div id="envelope-container">
-                    <img id="envelope" src="assets/envelope_img.png" draggable=false></img>
-                    <h3 id="envelope-click-text">Click to open the envelope!</h3>
-                </div>
-            </div>
-
-            <div id="guess-accuse-hud">
-                <h3 id="guess-accuse-header">Make a guess or an accusation!</h3>
-                <div id="ga-container">
-                    <button id="choose-guess-btn" class="ga-btn">Guess</button>
-                    <button id="choose-accuse-btn" class="ga-btn">Accuse</button>
-                </div>
-            </div>
-
-            <div id="guess-hud">
-                <h2 id="guess-hud-header">Guess!</h2>
-                
-                <h3 id="room-label" class="guess-label">Room: ???</h3>
-                <h3 id="suspect-label" class="guess-label">Suspect: ???</h3>
-                <h3 id="weapon-label" class="guess-label">Weapon: ???</h3>
-
-                <button id="guess-btn">Submit Guess</button>
-
-                <div id="guess-dropdown-container">
-                    <div id="suspect-container">
-                        <div class="suspect-btn">Miss Scarlet</div>
-                        <div class="suspect-btn">Professor Plum</div>
-                        <div class="suspect-btn">Mrs. Peacock</div>
-                        <div class="suspect-btn">Mr. Green</div>
-                        <div class="suspect-btn">Colonel Mustard</div>
-                        <div class="suspect-btn">Mrs. White</div>
-                    </div>
-                    <div id="weapon-container">
-                        <div class="weapon-btn">Candlestick</div>
-                        <div class="weapon-btn">Dagger</div>
-                        <div class="weapon-btn">Lead Pipe</div>
-                        <div class="weapon-btn">Pistol</div>
-                        <div class="weapon-btn">Rope</div>
-                        <div class="weapon-btn">Wrench</div>
+                <div id="guess-accuse-hud">
+                    <h3 id="guess-accuse-header">Make a guess or an accusation!</h3>
+                    <div id="ga-container">
+                        <button id="choose-guess-btn" class="ga-btn">Guess</button>
+                        <button id="choose-accuse-btn" class="ga-btn">Accuse</button>
                     </div>
                 </div>
+
+                <div id="guess-hud">
+                    <h2 id="guess-hud-header">Guess!</h2>
+                    
+                    <h3 id="room-label" class="guess-label">Room: ???</h3>
+                    <h3 id="suspect-label" class="guess-label">Suspect: ???</h3>
+                    <h3 id="weapon-label" class="guess-label">Weapon: ???</h3>
+
+                    <button id="guess-btn">Submit Guess</button>
+
+                    <div id="guess-dropdown-container">
+                        <div id="suspect-container">
+                            <div class="suspect-btn">Miss Scarlet</div>
+                            <div class="suspect-btn">Professor Plum</div>
+                            <div class="suspect-btn">Mrs. Peacock</div>
+                            <div class="suspect-btn">Mr. Green</div>
+                            <div class="suspect-btn">Colonel Mustard</div>
+                            <div class="suspect-btn">Mrs. White</div>
+                        </div>
+                        <div id="weapon-container">
+                            <div class="weapon-btn">Candlestick</div>
+                            <div class="weapon-btn">Dagger</div>
+                            <div class="weapon-btn">Lead Pipe</div>
+                            <div class="weapon-btn">Pistol</div>
+                            <div class="weapon-btn">Rope</div>
+                            <div class="weapon-btn">Wrench</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="accuse-hud" style="display: none;">
+                    <h2 id="accuse-hud-header">Accuse!</h2>
+                    
+                    <h3 id="accuse-room-label" class="guess-label">Room: ???</h3>
+                    <h3 id="accuse-suspect-label" class="guess-label">Suspect: ???</h3>
+                    <h3 id="accuse-weapon-label" class="guess-label">Weapon: ???</h3>
+
+                    <button id="accuse-btn">Submit Accusation</button>
+
+                    <div id="accuse-dropdown-container">
+                        <div id="accuse-room-container">
+                            <div class="room-btn">Hall</div>
+                            <div class="room-btn">Lounge</div>
+                            <div class="room-btn">Dining Room</div>
+                            <div class="room-btn">Kitchen</div>
+                            <div class="room-btn">Ballroom</div>
+                            <div class="room-btn">Conservatory</div>
+                            <div class="room-btn">Billiard Room</div>
+                            <div class="room-btn">Library</div>
+                            <div class="room-btn">Study</div>
+                        </div>
+
+                        <div id="accuse-suspect-container">
+                            <div class="suspect-btn">Miss Scarlet</div>
+                            <div class="suspect-btn">Professor Plum</div>
+                            <div class="suspect-btn">Mrs. Peacock</div>
+                            <div class="suspect-btn">Mr. Green</div>
+                            <div class="suspect-btn">Colonel Mustard</div>
+                            <div class="suspect-btn">Mrs. White</div>
+                        </div>
+
+                        <div id="accuse-weapon-container">
+                            <div class="weapon-btn">Candlestick</div>
+                            <div class="weapon-btn">Dagger</div>
+                            <div class="weapon-btn">Lead Pipe</div>
+                            <div class="weapon-btn">Pistol</div>
+                            <div class="weapon-btn">Rope</div>
+                            <div class="weapon-btn">Wrench</div>
+                        </div>
+                    </div>
+                </div>
+
+                <img src="assets/clue_board.png" alt="Clue Board" id="board-img" draggable="false">
+
+                <div class="room" id="staircase"></div>
+                <div class="room" id="hall"></div>
+                <div class="room" id="lounge"></div>
+                <div class="room" id="dining-room"></div>
+                <div class="room" id="kitchen"></div>
+                <div class="room" id="ballroom"></div>
+                <div class="room" id="conservatory"></div>
+                <div class="room" id="billiard-room"></div>
+                <div class="room" id="library"></div>
+                <div class="room" id="study"></div>
             </div>
 
-            <img src="assets/clue_board.png" alt="Clue Board" id="board-img" draggable="false">
-
-            <div class="room" id="staircase"></div>
-            <div class="room" id="hall"></div>
-            <div class="room" id="lounge"></div>
-            <div class="room" id="dining-room"></div>
-            <div class="room" id="kitchen"></div>
-            <div class="room" id="ballroom"></div>
-            <div class="room" id="conservatory"></div>
-            <div class="room" id="billiard-room"></div>
-            <div class="room" id="library"></div>
-            <div class="room" id="study"></div>
-        </div>
-
-        <div id="revealed-card-box">
-            <div id="revealed-card-wrapper">
-                <div id="revealed-card-pawn"></div>
-                <h2 id="revealed-card-text"></h2>
+            <div id="revealed-card-box">
+                <div id="revealed-card-wrapper">
+                    <div id="revealed-card-pawn"></div>
+                    <h2 id="revealed-card-text"></h2>
+                </div>
+                <h3 id="revealed-card-click-text">Click anywhere to continue</h3>
             </div>
-            <h3 id="revealed-card-click-text">Click anywhere to continue</h3>
+
         </div>
 
         <div id="hand-container">
@@ -160,6 +210,7 @@
         </div>
 
     </div>
+    <h5 id="version-text">v1.0</h5>
 
     <script src="script.js"></script>
 </body>

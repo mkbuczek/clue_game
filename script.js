@@ -5,15 +5,12 @@ const setupContainer = document.getElementById("setup-container");
 const gameContainer = document.getElementById("game-container");
 const currentTurnHeader = document.getElementById("current-turn-header");
 const guessHUD = document.getElementById("guess-hud");
+const accuseHUD = document.getElementById("accuse-hud");
 const guessAccuseHUD = document.getElementById("guess-accuse-hud");
 const envelopeHUD = document.getElementById("envelope-hud");
 const gamePawnContainer = document.getElementById("game-pawn-container");
 const difficultySelect = document.getElementById("difficulty-select");
 const difficultyDesc = document.getElementById("difficulty-desc");
-
-//TODO:
-//visual overhaul
-//cpu loses (remove from game)
 
 const suspectsArray = ["Miss Scarlet", "Professor Plum", "Mrs. Peacock",
     "Mr. Green", "Colonel Mustard", "Mrs. White"];
@@ -88,7 +85,7 @@ let difficulty = "easy";
 
 const roomOccupancy = {};
 
-const debug = true;
+const debug = false;
 
 let envelopeArray = [];
 
@@ -107,6 +104,7 @@ let roomGuess = null;
 let suspectGuess = null;
 let weaponGuess = null;
 let guessBtnHandler = null;
+let accuseBtnHandler = null;
 
 let playerSeenCards = new Set();
 
@@ -304,7 +302,7 @@ hideBtn.addEventListener("click", () => {
     //hide hand if displayed
     if(handDiv.style.display !== "none"){
         handDiv.style.display = "none";
-        hideBtn.textContent = "Show";
+        hideBtn.textContent = "Show (H)";
         
     //show hand if hidden
     } else {
@@ -325,7 +323,7 @@ document.addEventListener("keydown", (event) => {
             hideBtn.textContent = "Hide (H)";
         } else {
             handDiv.style.display = "none";
-            hideBtn.textContent = "Show";
+            hideBtn.textContent = "Show (H)";
         }
 
         event.preventDefault(); //prevent n from typing
@@ -420,6 +418,7 @@ function playerMove(){
     });
 }
 
+//main CPU logic; handles moves, guesses, and accusations
 async function cpuMove(currentPawn){
     //cpu is thinking
     showRevealedCardBox(currentPawn, `is thinking...`, null, false);
@@ -461,7 +460,7 @@ async function cpuMove(currentPawn){
             winLoseText.textContent = "You lose";
             winLoseText.style.color = "maroon";
             //show result
-            showRevealedCardBox(null, cpuCorrect ? "The accusation is correct! CPU wins!" : "Wrong! The CPU loses.", null, true);
+            showRevealedCardBox(null, cpuCorrect ? `The accusation is correct! ${currentPawn} wins!` : `Wrong! ${currentPawn} loses.`, null, true);
             await dialogueWait({ requireClick: true });
             hideRevealedCardBox();
             //show envelope
@@ -530,6 +529,7 @@ async function cpuMove(currentPawn){
     endTurn();
 }
 
+//generates a smart CPU guess based on their notebook
 function generateCPUGuess(pawn, currentRoom){
     const notebook = cpuNotebooks[pawn];
     const cards = notebook.cards;
@@ -573,6 +573,7 @@ function generateCPUGuess(pawn, currentRoom){
     return { suspect, weapon, room: currentRoom };
 }
 
+//checks if CPU can accuse based on their personality
 function cpuCanAccuse(pawn){
     const notebook = cpuNotebooks[pawn];
     const cards = notebook.cards;
@@ -601,6 +602,7 @@ function cpuCanAccuse(pawn){
     return null; //not ready to accuse
 }
 
+//updates CPU notebooks after a guess 
 function updateCPUNotebook(guesser, guessArray, revealedInfo){
     const notebook = cpuNotebooks[guesser];
     if (!notebook) return;
@@ -641,6 +643,7 @@ function updateCPUNotebook(guesser, guessArray, revealedInfo){
     }
 }
 
+//initialize CPU learning (notebooks)
 function initCPUNotebooks(){
     cpuNotebooks = {};
 
@@ -727,31 +730,32 @@ function handleRoomClick(e){
     showGuessAccuseHUD(clickedRoom);
 }
 
+//show the hud that gives the player guess/accuse options, called when player clicks a room
 function showGuessAccuseHUD(clickedRoom){
     guessAccuseHUD.style.display = "flex";
 
     const guessBtn = document.getElementById("choose-guess-btn");
     const accuseBtn = document.getElementById("choose-accuse-btn");
 
-    guessBtn.addEventListener("click", () => {
-        showGuessHUD(clickedRoom, true);
+    guessBtn.onclick = () => {
+        showGuessHUD(clickedRoom);
         guessAccuseHUD.style.display = "none";
-    });
+    };
 
-    accuseBtn.addEventListener("click", () => {
-        showGuessHUD(clickedRoom, false);
+    accuseBtn.onclick = () => {
+        showAccuseHUD();
         guessAccuseHUD.style.display = "none";
-    });
+    };
 }
 
 //displays guess HUD, called when player chooses to guess after clicking a room
-function showGuessHUD(room, guess = true){
+function showGuessHUD(room){
     const roomLabel = document.getElementById("room-label");
-    const guessHeader = document.getElementById("guess-hud-header");
     const guessBtn = document.getElementById("guess-btn");
     roomLabel.textContent = `Room: ${room}`;
     roomGuess = room;
 
+    //show the guess HUD
     guessHUD.style.display = "flex";
 
     //remove previous listener
@@ -762,20 +766,39 @@ function showGuessHUD(room, guess = true){
 
     //add listener
     guessBtnHandler = () => {
-        submitGuess(guess);
+        submitGuess(true);
     };
     guessBtn.addEventListener("click", guessBtnHandler);
-
-    //update HUD text
-    if(!guess) {
-        guessHeader.textContent = "Accuse!";
-        guessBtn.textContent = "Submit Accusation";
-    } else {
-        guessHeader.textContent = "Guess!";
-        guessBtn.textContent = "Submit Guess";
-    }
 }
 
+//displays accuse HUD, called when player chooses to accuse after clicking a room
+function showAccuseHUD(){
+    //set labels
+    document.getElementById("accuse-room-label").textContent = "Room: ???";
+    document.getElementById("accuse-suspect-label").textContent = "Suspect: ???";
+    document.getElementById("accuse-weapon-label").textContent = "Weapon: ???";
+
+    //clear stored guesses
+    suspectGuess = null;
+    weaponGuess = null;
+    roomGuess = null;
+
+    //show the accuse HUD
+    accuseHUD.style.display = "flex";
+
+    //remove old listener if it exists
+    const accuseBtn = document.getElementById("accuse-btn");
+    if (accuseBtnHandler) {
+        accuseBtn.removeEventListener("click", accuseBtnHandler);
+        accuseBtnHandler = null;
+    }
+
+    //add new submit handler
+    accuseBtnHandler = () => submitGuess(false); //false = accusation
+    accuseBtn.addEventListener("click", accuseBtnHandler);
+}
+
+//guess suspect btns
 suspectBtns.forEach(btn => {
     btn.addEventListener("click", () => {
         suspectBtns.forEach(btn => btn.classList.remove("selected-guess-hud-btn")); //remove class on each click
@@ -787,6 +810,7 @@ suspectBtns.forEach(btn => {
     });
 });
 
+//guess weapon btns
 weaponBtns.forEach(btn => {
     btn.addEventListener("click", () => {
         weaponBtns.forEach(btn => btn.classList.remove("selected-guess-hud-btn")); //remove class on each click
@@ -795,6 +819,42 @@ weaponBtns.forEach(btn => {
         const weaponLabel = document.getElementById("weapon-label");
         weaponLabel.textContent = `Weapon: ${btn.textContent}`;
         weaponGuess = btn.textContent;
+    });
+});
+
+//accuse suspect btns
+document.querySelectorAll("#accuse-suspect-container .suspect-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll("#accuse-suspect-container .suspect-btn")
+            .forEach(b => b.classList.remove("selected-accuse-suspect-btn"));
+        btn.classList.add("selected-accuse-suspect-btn");
+        
+        document.getElementById("accuse-suspect-label").textContent = `Suspect: ${btn.textContent}`;
+        suspectGuess = btn.textContent;
+    });
+});
+
+//accuse weapon btns
+document.querySelectorAll("#accuse-weapon-container .weapon-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll("#accuse-weapon-container .weapon-btn")
+            .forEach(b => b.classList.remove("selected-accuse-weapon-btn"));
+        btn.classList.add("selected-accuse-weapon-btn");
+        
+        document.getElementById("accuse-weapon-label").textContent = `Weapon: ${btn.textContent}`;
+        weaponGuess = btn.textContent;
+    });
+});
+
+//accuse room btns
+document.querySelectorAll("#accuse-room-container .room-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll("#accuse-room-container .room-btn")
+            .forEach(b => b.classList.remove("selected-accuse-room-btn"));
+        btn.classList.add("selected-accuse-room-btn");
+        
+        document.getElementById("accuse-room-label").textContent = `Room: ${btn.textContent}`;
+        roomGuess = btn.textContent;
     });
 });
 
@@ -811,15 +871,21 @@ async function submitGuess(guess = true){
     suspectLabel.textContent = `Suspect: ???`;
     const weaponLabel = document.getElementById("weapon-label");
     weaponLabel.textContent = `Weapon: ???`;
+    const roomLabel = document.querySelectorAll("#accuse-room-container .room-btn")
+    roomLabel.textContent = `Room: ???`;
 
     let guessArray = [suspectGuess, weaponGuess, roomGuess];
     if (debug) console.log(guessArray);
 
     //reset HUD
     guessHUD.style.display = "none";
+    accuseHUD.style.display = "none";
     suspectGuess = weaponGuess = roomGuess = null;
     suspectBtns.forEach(btn => btn.classList.remove("selected-guess-hud-btn"));
     weaponBtns.forEach(btn => btn.classList.remove("selected-guess-hud-btn"));
+    document.querySelectorAll("#accuse-room-container .room-btn").forEach(btn => {
+        btn.classList.remove("selected-accuse-room-btn");
+    });
 
     if(guess){
         //guess
@@ -854,7 +920,7 @@ async function findMatchingCard(guessArray, isPlayerGuess = false){
                 //display hand if hidden
                 if (handDiv.style.display === "none"){
                     handDiv.style.display = "flex";
-                    hideBtn.textContent = "Hide";
+                    hideBtn.textContent = "Hide (H)";
                 }
 
                 const chosenCard = await playerRevealCard(matchingCards);
@@ -942,7 +1008,7 @@ let currentDialogueClickHandler = null;
 
 function dialogueWait({ ms = null, requireClick = false } = {}) {
     return new Promise(resolve => {
-        // Clean up any previous click handler
+        //clean up any previous click handler
         if (currentDialogueClickHandler) {
             document.removeEventListener("click", currentDialogueClickHandler);
             currentDialogueClickHandler = null;
